@@ -1,6 +1,4 @@
-# Tweety
-
-Tweets fake news classifier
+# Main Service
 
 To run the service localy execute:
 
@@ -8,10 +6,10 @@ To run the service localy execute:
 make compose-up
 ```
 
-Example classify call:
+Example call:
 
 ```
-GET localhost:8080/v1/tweets/classify?pageId=111
+GET localhost:8080/v1/users/echo
 ```
 
 Run tests:
