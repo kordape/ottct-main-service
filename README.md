@@ -15,7 +15,7 @@ make compose-up
 Example call:
 
 ```
-GET localhost:8080/v1/users/echo
+GET localhost:8080/v1/echo
 ```
 
 Run tests:

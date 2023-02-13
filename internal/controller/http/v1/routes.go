@@ -13,8 +13,8 @@ type routes struct {
 func NewRoutes(handler *gin.RouterGroup, l logger.Interface) {
 	r := &routes{l}
 
-	h := handler.Group("/users")
+	h := handler.Group("/echo")
 	{
-		h.GET("/echo", r.echoHandler)
+		h.GET("/", r.echoHandler)
 	}
 }
