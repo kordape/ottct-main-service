@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	v1 "github.com/kordape/tweety/internal/controller/http/v1"
-	"github.com/kordape/tweety/pkg/logger"
+	v1 "github.com/kordape/ottct-main-service/internal/controller/http/v1"
+	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
 func NewRouter(handler *gin.Engine, l logger.Interface) {

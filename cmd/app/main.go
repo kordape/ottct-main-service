@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/kordape/tweety/config"
-	"github.com/kordape/tweety/internal/app"
+	"github.com/kordape/ottct-main-service/config"
+	"github.com/kordape/ottct-main-service/internal/app"
 )
 
 func main() {

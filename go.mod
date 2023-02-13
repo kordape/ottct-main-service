@@ -1,4 +1,4 @@
-module github.com/kordape/tweety
+module github.com/kordape/ottct-main-service
 
 go 1.17
 

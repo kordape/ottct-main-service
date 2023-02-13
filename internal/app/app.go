@@ -8,10 +8,10 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kordape/tweety/config"
-	"github.com/kordape/tweety/internal/controller/http"
-	"github.com/kordape/tweety/pkg/httpserver"
-	"github.com/kordape/tweety/pkg/logger"
+	"github.com/kordape/ottct-main-service/config"
+	"github.com/kordape/ottct-main-service/internal/controller/http"
+	"github.com/kordape/ottct-main-service/pkg/httpserver"
+	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
 // Run creates objects via constructors.

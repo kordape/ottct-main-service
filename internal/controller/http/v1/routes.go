@@ -3,7 +3,7 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/kordape/tweety/pkg/logger"
+	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
 type routes struct {
