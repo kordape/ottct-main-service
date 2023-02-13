@@ -1,11 +1,12 @@
-// Package v1 implements routing paths. Each services in own file.
-package v1
+// Package http implements routing paths. Each services in own file.
+package http
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	v1 "github.com/kordape/tweety/internal/controller/http/v1"
 	"github.com/kordape/tweety/pkg/logger"
 )
 
@@ -20,6 +21,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface) {
 	// Routers
 	h := handler.Group("/v1")
 	{
-		newRoutes(h, l)
+		v1.NewRoutes(h, l)
 	}
 }

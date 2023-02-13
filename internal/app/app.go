@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/tweety/config"
-	v1 "github.com/kordape/tweety/internal/controller/http/v1"
+	"github.com/kordape/tweety/internal/controller/http"
 	"github.com/kordape/tweety/pkg/httpserver"
 	"github.com/kordape/tweety/pkg/logger"
 )
@@ -20,7 +20,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, log)
+	http.NewRouter(handler, log)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
