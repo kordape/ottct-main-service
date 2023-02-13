@@ -1,0 +1,17 @@
+test: ### run test
+	go test -v -cover -race ./internal/...
+
+compose-up: ### Run docker-compose
+	docker-compose -f docker-compose.yml up --build -d app && docker-compose logs -f
+
+compose-up-integration-test: ### Run docker-compose with integration test
+	docker-compose up --build --abort-on-container-exit --exit-code-from integration
+
+compose-down: ### Down docker-compose
+	docker-compose down --remove-orphans
+
+linter-golangci: ### check by golangci linter
+	golangci-lint run
+
+integration-test: ### run integration-test
+	go clean -testcache && go test -v ./integration-test/...

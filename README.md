@@ -1,5 +1,11 @@
 # Main Service
 
+How to build:
+
+```
+make docker-build
+```
+
 To run the service localy execute:
 
 ```
