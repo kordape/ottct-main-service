@@ -14,4 +14,6 @@ linter-golangci: ### check by golangci linter
 	golangci-lint run
 
 integration-test: ### run integration-test
-	go clean -testcache && go test -v ./integration-test/...
+	go clean -testcache && go test -timeout 5m -race -v ./it/...
+
+.PHONY: integration-test
