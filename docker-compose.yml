@@ -8,7 +8,7 @@ services:
     container_name: app
     image: ottct-main-service:latest
     environment:
-      EXAMPLE: '1234'
+      DB_URL: 'postgres://postgres:tests@db:5432/ottct_main_service'
     ports:
       - 8080:8080
     networks:

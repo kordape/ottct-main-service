@@ -12,11 +12,19 @@ import (
 	"github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
+	pg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
+
+	_, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// HTTP Server
 	handler := gin.New()

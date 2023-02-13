@@ -12,17 +12,22 @@ type (
 		App  `yaml:"app"`
 		HTTP `yaml:"http"`
 		Log  `yaml:"logger"`
+		DB   `yaml:"db"`
 	}
 
 	// App -.
 	App struct {
-		Name    string `env-required:"true" yaml:"name"    env:"APP_NAME"`
+		Name    string `env-required:"true" yaml:"name" env:"APP_NAME"`
 		Version string `env-required:"true" yaml:"version" env:"APP_VERSION"`
 	}
 
 	// HTTP -.
 	HTTP struct {
 		Port string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+	}
+
+	DB struct {
+		URL string `env-required:"true" yaml:"username" env:"DB_URL"`
 	}
 
 	// Log -.
