@@ -10,32 +10,32 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/controller/http"
+	"github.com/kordape/ottct-main-service/internal/database/postgres"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
+	pg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
 
-	// TODO: Enable DB initialization once RDS is created
-	/*
-		dbClient, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
+	dbClient, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
 
-		if err != nil {
-			log.Fatal(err)
-		}
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		db, err := postgres.New(dbClient, log)
-		if err != nil {
-			log.Fatal(err)
-		}
+	db, err := postgres.New(dbClient, log)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		err = db.Migrate()
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
+	err = db.Migrate()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// HTTP Server
 	handler := gin.New()
