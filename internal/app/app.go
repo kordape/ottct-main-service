@@ -11,6 +11,7 @@ import (
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
+	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	pg "gorm.io/driver/postgres"
@@ -37,9 +38,14 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
+	userManager, err := handler.NewUserManager(db, log)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log)
+	http.NewRouter(handler, log, userManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
