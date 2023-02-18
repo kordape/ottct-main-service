@@ -11,7 +11,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
-func NewRouter(handler *gin.Engine, l logger.Interface, userManager handler.UserManager) {
+func NewRouter(handler *gin.Engine, l logger.Interface, userManager handler.AuthManager) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())

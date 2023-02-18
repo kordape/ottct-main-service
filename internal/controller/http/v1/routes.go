@@ -11,7 +11,7 @@ type routes struct {
 	l logger.Interface
 }
 
-func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler.UserManager) {
+func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler.AuthManager) {
 	r := &routes{l}
 
 	echo := handler.Group("/echo")
@@ -19,8 +19,8 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler
 		echo.GET("/", r.echoHandler)
 	}
 
-	users := handler.Group("/users")
+	users := handler.Group("/signup")
 	{
-		users.POST("/", r.newPostUsersHandler(userManager))
+		users.POST("/", r.newSignUpHandler(userManager))
 	}
 }

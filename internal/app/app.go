@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
@@ -38,7 +39,7 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	userManager, err := handler.NewUserManager(db, log)
+	userManager, err := handler.NewAuthManager(db, log, validator.New())
 	if err != nil {
 		log.Fatal(err)
 	}
