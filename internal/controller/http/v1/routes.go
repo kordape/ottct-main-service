@@ -19,8 +19,8 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler
 		echo.GET("/", r.echoHandler)
 	}
 
-	users := handler.Group("/signup")
+	signup := handler.Group("/signup")
 	{
-		users.POST("/", r.newSignUpHandler(userManager))
+		signup.POST("/", r.newSignUpHandler(userManager))
 	}
 }
