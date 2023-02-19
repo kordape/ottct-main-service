@@ -23,4 +23,9 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler
 	{
 		signup.POST("/", r.newSignUpHandler(userManager))
 	}
+
+	auth := handler.Group("/auth")
+	{
+		auth.POST("/", r.newAuthHandler(userManager))
+	}
 }

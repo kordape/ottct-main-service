@@ -10,6 +10,7 @@ import (
 )
 
 var ErrInvalidRequest error = errors.New("Invalid request")
+var ErrUserNotFound error = errors.New("User not found")
 
 type User struct {
 	Email    string
@@ -19,6 +20,7 @@ type User struct {
 
 type UserStorage interface {
 	CreateUser(user User) error
+	GetUserByCredentials(email string, password string) (User, error)
 }
 
 type AuthManager struct {
@@ -79,6 +81,33 @@ func (m AuthManager) SignUp(request api.SignUpRequest) error {
 	}
 
 	m.log.Info("[AuthManager] Created user")
+
+	return nil
+}
+
+func (m AuthManager) Auth(request api.AuthRequest) error {
+	err := m.validate()
+
+	if err != nil {
+		return fmt.Errorf("[AuthManager] manager validation error: %w", err)
+	}
+
+	err = m.requestValidator.Struct(request)
+	if err != nil {
+		m.log.Error(fmt.Errorf("[AuthManager] Invalid Auth request: %w", err))
+		return ErrInvalidRequest
+	}
+
+	m.log.Info("[AuthManager] Fetching user")
+
+	user, err := m.storage.GetUserByCredentials(request.Email, request.Password)
+
+	if err != nil {
+		m.log.Error(fmt.Errorf("[AuthManager] Failed to get user: %w", err))
+		return fmt.Errorf("[AuthManager] storage error: %w", err)
+	}
+
+	m.log.Info(fmt.Sprintf("[AuthManager] Fetched user: %s", user.Email))
 
 	return nil
 }
