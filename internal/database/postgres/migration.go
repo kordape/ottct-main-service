@@ -22,7 +22,7 @@ func (db *DB) Migrate() error {
 	})
 
 	if err := m.Migrate(); err != nil {
-		db.log.Error("Could not migrate: %v", err)
+		db.log.Error(fmt.Errorf("Could not migrate: %v", err))
 		return fmt.Errorf("Migration failed: %v", err)
 	}
 
