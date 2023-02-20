@@ -22,7 +22,7 @@ func (db *DB) CreateUser(user handler.User) error {
 func (db *DB) GetUserByCredentials(email string, password string) (handler.User, error) {
 	u := User{}
 
-	err := db.db.Where("email = ? AND password >= ?", email, password).First(&u).Error
+	err := db.db.Where("email = ? AND password = ?", email, password).First(&u).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return handler.User{}, handler.ErrUserNotFound

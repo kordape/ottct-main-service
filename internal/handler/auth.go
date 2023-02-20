@@ -33,12 +33,13 @@ type AuthManager struct {
 	tokenManager     *token.Manager
 }
 
-func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate, secretKey string) (AuthManager, error) {
+func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate, tokenManager *token.Manager) (AuthManager, error) {
 
 	m := AuthManager{
 		storage:          userStorage,
 		log:              log,
 		requestValidator: validator,
+		tokenManager:     tokenManager,
 	}
 
 	err := m.validate()
@@ -47,19 +48,20 @@ func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *va
 		return m, fmt.Errorf("[AuthManager] validation error: %w", err)
 	}
 
-	tokenManager, err := token.NewManager(secretKey, defaultIssuer)
-	if err != nil {
-		return m, fmt.Errorf("[AuthManager] token manager error: %w", err)
-	}
-
-	m.tokenManager = tokenManager
-
 	return m, nil
 }
 
 func (m AuthManager) validate() error {
 	if m.storage == nil {
 		return errors.New("user storage is nil")
+	}
+
+	if m.tokenManager == nil {
+		return errors.New("token manager is nil")
+	}
+
+	if m.requestValidator == nil {
+		return errors.New("request validator is nil")
 	}
 
 	return nil

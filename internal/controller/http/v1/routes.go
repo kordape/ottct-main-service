@@ -5,14 +5,17 @@ import (
 
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
 type routes struct {
 	l logger.Interface
 }
 
-func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler.AuthManager) {
+func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler.AuthManager, tokenManager *token.Manager) {
 	r := &routes{l}
+
+	authMiddleware := AuthMiddleware(tokenManager)
 
 	echo := handler.Group("/echo")
 	{
@@ -27,5 +30,10 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager handler
 	auth := handler.Group("/auth")
 	{
 		auth.POST("/", r.newAuthHandler(userManager))
+	}
+
+	secureEcho := handler.Group("/secureecho", authMiddleware)
+	{
+		secureEcho.GET("/", r.echoHandler)
 	}
 }

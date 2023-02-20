@@ -15,6 +15,7 @@ import (
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/kordape/ottct-main-service/pkg/token"
 	pg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -39,14 +40,19 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	userManager, err := handler.NewAuthManager(db, log, validator.New(), cfg.SecretKey)
+	tokenManager, err := token.NewManager(cfg.SecretKey, "ottct")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userManager, err := handler.NewAuthManager(db, log, validator.New(), tokenManager)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log, userManager)
+	http.NewRouter(handler, log, userManager, tokenManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

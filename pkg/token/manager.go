@@ -74,3 +74,20 @@ func (m *Manager) GenerateJWT(user string) (string, error) {
 
 	return tokenString, nil
 }
+
+func (m *Manager) VerifyJWT(tokenString string) error {
+	claims := TokenClaims{}
+	_, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(m.secretHS256Key), nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("Invalid token: %w", err)
+	}
+
+	return nil
+}
