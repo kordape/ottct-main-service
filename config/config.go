@@ -9,10 +9,11 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		DB   `yaml:"db"`
+		App       `yaml:"app"`
+		HTTP      `yaml:"http"`
+		Log       `yaml:"logger"`
+		DB        `yaml:"db"`
+		SecretKey string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
 	}
 
 	// App -.
