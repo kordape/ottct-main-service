@@ -7,10 +7,13 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kordape/ottct-main-service/pkg/api"
 	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
 var ErrInvalidRequest error = errors.New("Invalid request")
 var ErrUserNotFound error = errors.New("User not found")
+
+const defaultIssuer = "ottct"
 
 type User struct {
 	Email    string
@@ -27,9 +30,10 @@ type AuthManager struct {
 	storage          UserStorage
 	log              logger.Interface
 	requestValidator *validator.Validate
+	tokenManager     *token.Manager
 }
 
-func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate) (AuthManager, error) {
+func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate, secretKey string) (AuthManager, error) {
 
 	m := AuthManager{
 		storage:          userStorage,
@@ -42,6 +46,13 @@ func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *va
 	if err != nil {
 		return m, fmt.Errorf("[AuthManager] validation error: %w", err)
 	}
+
+	tokenManager, err := token.NewManager(secretKey, defaultIssuer)
+	if err != nil {
+		return m, fmt.Errorf("[AuthManager] token manager error: %w", err)
+	}
+
+	m.tokenManager = tokenManager
 
 	return m, nil
 }
@@ -67,8 +78,6 @@ func (m AuthManager) SignUp(request api.SignUpRequest) error {
 		return ErrInvalidRequest
 	}
 
-	m.log.Info("[AuthManager] Creating user")
-
 	err = m.storage.CreateUser(User{
 		Email:    request.Email,
 		Password: request.Password,
@@ -80,34 +89,34 @@ func (m AuthManager) SignUp(request api.SignUpRequest) error {
 		return fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
-	m.log.Info("[AuthManager] Created user")
-
 	return nil
 }
 
-func (m AuthManager) Auth(request api.AuthRequest) error {
+func (m AuthManager) Auth(request api.AuthRequest) (string, error) {
 	err := m.validate()
 
 	if err != nil {
-		return fmt.Errorf("[AuthManager] manager validation error: %w", err)
+		return "", fmt.Errorf("[AuthManager] manager validation error: %w", err)
 	}
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
 		m.log.Error(fmt.Errorf("[AuthManager] Invalid Auth request: %w", err))
-		return ErrInvalidRequest
+		return "", ErrInvalidRequest
 	}
-
-	m.log.Info("[AuthManager] Fetching user")
 
 	user, err := m.storage.GetUserByCredentials(request.Email, request.Password)
 
 	if err != nil {
 		m.log.Error(fmt.Errorf("[AuthManager] Failed to get user: %w", err))
-		return fmt.Errorf("[AuthManager] storage error: %w", err)
+		return "", fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
-	m.log.Info(fmt.Sprintf("[AuthManager] Fetched user: %s", user.Email))
+	token, err := m.tokenManager.GenerateJWT(user.Email)
+	if err != nil {
+		m.log.Error(fmt.Errorf("[AuthManager] Failed to generate token for user: %w", err))
+		return "", fmt.Errorf("[AuthManager] token manager error: %w", err)
+	}
 
-	return nil
+	return token, nil
 }

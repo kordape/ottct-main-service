@@ -9,6 +9,7 @@ services:
     image: ottct-main-service:latest
     environment:
       DB_URL: 'postgres://postgres:tests@db:5432/ottct_main_service'
+      SECRET_KEY: 's+76qrrI53tqP666lQla3t+pitXrAsYQQbEn/55JQKA='
     ports:
       - 8080:8080
     networks:

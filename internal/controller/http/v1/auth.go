@@ -66,7 +66,7 @@ func (r *routes) newAuthHandler(userManager handler.AuthManager) func(c *gin.Con
 			return
 		}
 
-		err = userManager.Auth(request)
+		token, err := userManager.Auth(request)
 
 		if err != nil {
 			if errors.Is(err, handler.ErrInvalidRequest) {
@@ -91,7 +91,7 @@ func (r *routes) newAuthHandler(userManager handler.AuthManager) func(c *gin.Con
 		}
 
 		c.JSON(http.StatusOK, api.AuthResponse{
-			Token: "Success",
+			Token: token,
 		})
 	}
 }

@@ -39,7 +39,7 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	userManager, err := handler.NewAuthManager(db, log, validator.New())
+	userManager, err := handler.NewAuthManager(db, log, validator.New(), cfg.SecretKey)
 	if err != nil {
 		log.Fatal(err)
 	}
