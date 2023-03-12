@@ -9,6 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	//"gorm.io/gorm"
+	//pg "gorm.io/driver/postgres"
+
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
