@@ -9,14 +9,13 @@ import (
 
 func (db *DB) Migrate() error {
 	m := gormigrate.New(db.db, gormigrate.DefaultOptions, []*gormigrate.Migration{
-		// create users table
 		{
-			ID: "202302141000",
+			ID: "202302240000",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&User{})
+				return tx.AutoMigrate(&User{}, &TwitterEntity{})
 			},
 			Rollback: func(tx *gorm.DB) error {
-				return tx.Migrator().DropTable("users")
+				return tx.Migrator().DropTable("users", TwitterEntitiesTableName)
 			},
 		},
 	})
