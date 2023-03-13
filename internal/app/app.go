@@ -53,7 +53,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log, userManager, tokenManager)
+	http.NewRouter(handler, log, db, userManager, tokenManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
