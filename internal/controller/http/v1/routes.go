@@ -3,8 +3,8 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
+	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
@@ -42,9 +42,9 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, db *postgres.DB, us
 		secureEcho.GET("/", r.echoHandler)
 	}
 
-	h := handler.Group("/entities")
+	entities := handler.Group("/entities", authMiddleware)
 	{
-		h.GET("/", r.getEntitiesHandler)
+		entities.GET("/", r.getEntitiesHandler)
 	}
 
 }
