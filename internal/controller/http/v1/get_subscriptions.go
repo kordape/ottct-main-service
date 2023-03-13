@@ -9,10 +9,10 @@ import (
 )
 
 func (r *routes) getSubscriptionsHandler(c *gin.Context) {
-	r.l.Debug("Get entities request received")
+	r.l.Debug("Get user subscriptions request received")
 	result, err := r.db.GetUserSupscriptions(c.Param("userid"))
 	if err != nil {
-		c.Error(fmt.Errorf("error getting entities for user from db: %w", err))
+		c.Error(fmt.Errorf("error getting subscriptions for user from db: %w", err))
 	}
 
 	response := make(api.GetEntitiesResponse, len(result))
