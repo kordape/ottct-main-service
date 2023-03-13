@@ -16,13 +16,13 @@ func (r *routes) getEntitiesHandler(c *gin.Context) {
 		c.Error(fmt.Errorf("error getting entities from db: %w", err))
 	}
 
-	response := make(api.GetEntitiesResponse, 0, 0)
-	for _, e := range result {
-		response = append(response, api.Entity{
+	response := make(api.GetEntitiesResponse, len(result))
+	for i, e := range result {
+		response[i] = api.Entity{
 			Id:               e.ID,
 			TwitterAccountId: e.TwitterAccountId,
 			Name:             e.DisplayName,
-		})
+		}
 	}
 
 	c.JSON(http.StatusOK, response)
