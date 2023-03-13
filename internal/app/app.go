@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	//"gorm.io/gorm"
-	//pg "gorm.io/driver/postgres"
+	pg "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/controller/http"
@@ -19,8 +19,6 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
-	pg "gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 // Run creates objects via constructors.
