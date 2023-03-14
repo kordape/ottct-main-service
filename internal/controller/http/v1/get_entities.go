@@ -20,8 +20,6 @@ func (r *routes) getEntitiesHandler(entityManager handler.EntityManager) func(c 
 			return
 		}
 
-		// TODO posto je handler.Entity : api.Entity mapiranje 1:1 da li da radimo ovaj blok?
-		// Nepotrebno je u ovom slucaju.
 		response := make(api.EntitiesResponse, len(entities))
 		for i, e := range entities {
 			response[i] = api.Entity{
