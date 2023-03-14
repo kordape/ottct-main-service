@@ -10,3 +10,19 @@ func (db *DB) GetTwitterEntities() (entities []TwitterEntity, err error) {
 
 	return
 }
+
+func (db *DB) GetUserSupscriptions(userId string) (entities []TwitterEntity, err error) {
+	var user User
+
+	err = db.db.First(&user, "id = ?", userId).Error
+	if err != nil {
+		db.log.Error("Error performing query: %s", err)
+	}
+
+	err = db.db.Model(&user).Association("Subscriptions").Find(&entities)
+	if err != nil {
+		db.log.Error("Error performing query: %s", err)
+	}
+
+	return
+}

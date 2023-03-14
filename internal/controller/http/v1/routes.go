@@ -47,4 +47,8 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, db *postgres.DB, us
 		entities.GET("/", r.getEntitiesHandler)
 	}
 
+	subscriptions := handler.Group("/subscribe", authMiddleware)
+	{
+		subscriptions.GET("/:userid", r.getSubscriptionsHandler)
+	}
 }
