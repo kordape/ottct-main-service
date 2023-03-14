@@ -7,13 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 
 	v1 "github.com/kordape/ottct-main-service/internal/controller/http/v1"
-	"github.com/kordape/ottct-main-service/internal/database/postgres"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
-func NewRouter(handler *gin.Engine, l logger.Interface, db *postgres.DB, userManager handler.AuthManager, tokenManager *token.Manager) {
+func NewRouter(handler *gin.Engine, l logger.Interface, userManager handler.AuthManager, tokenManager *token.Manager, entityManager handler.EntityManager, subscriptionsManager handler.SubscriptionManager) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -24,6 +23,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, db *postgres.DB, userMan
 	// Routers
 	h := handler.Group("/v1")
 	{
-		v1.NewRoutes(h, l, db, userManager, tokenManager)
+		v1.NewRoutes(h, l, userManager, tokenManager, entityManager, subscriptionsManager)
 	}
 }

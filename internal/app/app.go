@@ -51,9 +51,13 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
+	entityManager := handler.NewEntityManager(db, log)
+
+	subscriptionsManager := handler.NewSubscriptionManager(db, log)
+
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log, db, userManager, tokenManager)
+	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

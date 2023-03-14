@@ -1,9 +1,9 @@
 package api
 
-type GetEntitiesResponse []Entity
+type EntitiesResponse []Entity
 
 type Entity struct {
-	Id               string `json:"id"`
-	TwitterAccountId string `json:"twitterAccountId"`
-	Name             string `json:"name"`
+	Id          string `json:"id"`
+	TwitterId   string `json:"twitterId"`
+	DisplayName string `json:"displayName"`
 }

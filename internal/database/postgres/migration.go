@@ -10,12 +10,21 @@ import (
 func (db *DB) Migrate() error {
 	m := gormigrate.New(db.db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
-			ID: "202302240000",
+			ID: "202303140000",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&User{}, &TwitterEntity{})
+				return tx.AutoMigrate(&Entity{})
 			},
 			Rollback: func(tx *gorm.DB) error {
-				return tx.Migrator().DropTable("users", TwitterEntitiesTableName)
+				return tx.Migrator().DropTable("entities")
+			},
+		},
+		{
+			ID: "202302240000",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&User{})
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return tx.Migrator().DropTable("users")
 			},
 		},
 	})
