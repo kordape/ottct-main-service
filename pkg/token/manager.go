@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -51,14 +52,14 @@ func (m *Manager) validate() error {
 
 // TokenClaims - Claims for a JWT access token.
 type TokenClaims struct {
-	User string `json:"user"`
+	User uint `json:"user"`
 	jwt.StandardClaims
 }
 
-func (m *Manager) GenerateJWT(user string) (string, error) {
+func (m *Manager) GenerateJWT(userId uint) (string, error) {
 	// Set-up claims
 	claims := TokenClaims{
-		User: user,
+		User: userId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(m.expiry).Unix(),
 			Issuer:    m.issuer,
@@ -90,4 +91,21 @@ func (m *Manager) VerifyJWT(tokenString string) error {
 	}
 
 	return nil
+}
+
+func (m *Manager) GetClaimsFromJWT(auth string) (*TokenClaims, error) {
+	token := strings.Split(auth, "Bearer ")[1]
+	claims := TokenClaims{}
+	_, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(m.secretHS256Key), nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error parsing token with claims: %w", err)
+	}
+
+	return &claims, nil
 }

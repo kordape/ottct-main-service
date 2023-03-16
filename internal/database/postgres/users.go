@@ -3,8 +3,9 @@ package postgres
 import (
 	"errors"
 
-	"github.com/kordape/ottct-main-service/internal/handler"
 	"gorm.io/gorm"
+
+	"github.com/kordape/ottct-main-service/internal/handler"
 )
 
 func (db *DB) CreateUser(user handler.User) error {
@@ -29,6 +30,7 @@ func (db *DB) GetUserByCredentials(email string, password string) (handler.User,
 	}
 
 	return handler.User{
+		Id:       u.ID,
 		Email:    u.Email,
 		Password: u.Password,
 		Phone:    u.Phone,

@@ -9,7 +9,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/api"
 )
 
-func (r *routes) getEntitiesHandler(entityManager handler.EntityManager) func(c *gin.Context) {
+func (r *routes) getEntitiesHandler(entityManager *handler.EntityManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		r.l.Debug("Get entities request received")
 
