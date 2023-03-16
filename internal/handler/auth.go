@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
+
 	"github.com/kordape/ottct-main-service/pkg/api"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
