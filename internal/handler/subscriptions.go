@@ -34,20 +34,20 @@ func (m SubscriptionManager) GetSubscriptionsByUser(userId uint) (entities []Ent
 	return
 }
 
-func (m SubscriptionManager) AddSubscription(userId uint, entityId string) error {
-	err := m.storage.AddSubscription(userId, entityId)
-	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to add subscription for user: %w", err))
-		return fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
+func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, subscribe bool) error {
+	if subscribe {
+		err := m.storage.AddSubscription(userId, entityId)
+		if err != nil {
+			m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
+			return fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
+		}
+
+		return nil
 	}
 
-	return nil
-}
-
-func (m SubscriptionManager) DeleteSubscription(userId uint, entityId string) error {
 	err := m.storage.DeleteSubscription(userId, entityId)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to delete subscription for user: %w", err))
+		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
 		return fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
 	}
 

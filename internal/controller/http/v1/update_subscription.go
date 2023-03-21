@@ -50,12 +50,7 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 			return
 		}
 
-		if request.Subscribe {
-			err = subscriptionsManager.AddSubscription(claims.User, entity.Id)
-		} else {
-			err = subscriptionsManager.DeleteSubscription(claims.User, entity.Id)
-		}
-
+		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request.Subscribe)
 		if err != nil {
 			r.l.Error(fmt.Errorf("Error while updating subscription: %s", err))
 			c.AbortWithStatus(http.StatusInternalServerError)
