@@ -12,7 +12,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/api"
 )
 
-func (r *routes) newSignUpHandler(userManager handler.AuthManager) func(c *gin.Context) {
+func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		r.l.Debug("SignUp request received")
 
@@ -50,7 +50,7 @@ func (r *routes) newSignUpHandler(userManager handler.AuthManager) func(c *gin.C
 	}
 }
 
-func (r *routes) newAuthHandler(userManager handler.AuthManager) func(c *gin.Context) {
+func (r *routes) newAuthHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		r.l.Debug("Auth request received")
 

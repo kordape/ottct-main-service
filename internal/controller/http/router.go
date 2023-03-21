@@ -12,7 +12,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
-func NewRouter(handler *gin.Engine, l logger.Interface, userManager handler.AuthManager, tokenManager *token.Manager, entityManager handler.EntityManager, subscriptionsManager handler.SubscriptionManager) {
+func NewRouter(handler *gin.Engine, l logger.Interface, userManager *handler.AuthManager, tokenManager *token.Manager, entityManager *handler.EntityManager, subscriptionsManager *handler.SubscriptionManager) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())

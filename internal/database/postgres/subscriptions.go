@@ -24,3 +24,21 @@ func (db *DB) GetSubscriptionsByUser(userId uint) ([]handler.Entity, error) {
 
 	return entities, nil
 }
+
+func (db *DB) AddSubscription(userId uint, entityId string) error {
+	err := db.db.Model(&User{ID: userId}).Association("Subscriptions").Append(&Entity{ID: entityId})
+	if err != nil {
+		return fmt.Errorf("Error adding subscription to the user: %w", err)
+	}
+
+	return nil
+}
+
+func (db *DB) DeleteSubscription(userId uint, entityId string) error {
+	err := db.db.Model(&User{ID: userId}).Association("Subscriptions").Delete(&Entity{ID: entityId})
+	if err != nil {
+		return fmt.Errorf("Error deleting user's subscription: %w", err)
+	}
+
+	return nil
+}

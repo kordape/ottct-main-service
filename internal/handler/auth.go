@@ -17,6 +17,7 @@ var ErrUserNotFound error = errors.New("User not found")
 const defaultIssuer = "ottct"
 
 type User struct {
+	Id       uint
 	Email    string
 	Password string
 	Phone    string
@@ -34,7 +35,7 @@ type AuthManager struct {
 	tokenManager     *token.Manager
 }
 
-func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate, tokenManager *token.Manager) (AuthManager, error) {
+func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *validator.Validate, tokenManager *token.Manager) (*AuthManager, error) {
 
 	m := AuthManager{
 		storage:          userStorage,
@@ -46,10 +47,10 @@ func NewAuthManager(userStorage UserStorage, log logger.Interface, validator *va
 	err := m.validate()
 
 	if err != nil {
-		return m, fmt.Errorf("[AuthManager] validation error: %w", err)
+		return &m, fmt.Errorf("[AuthManager] validation error: %w", err)
 	}
 
-	return m, nil
+	return &m, nil
 }
 
 func (m AuthManager) validate() error {
@@ -115,7 +116,7 @@ func (m AuthManager) Auth(request api.AuthRequest) (string, error) {
 		return "", fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
-	token, err := m.tokenManager.GenerateJWT(user.Email)
+	token, err := m.tokenManager.GenerateJWT(user.Id)
 	if err != nil {
 		m.log.Error(fmt.Errorf("[AuthManager] Failed to generate token for user: %w", err))
 		return "", fmt.Errorf("[AuthManager] token manager error: %w", err)

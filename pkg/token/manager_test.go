@@ -16,7 +16,7 @@ func TestGenerateJWT(t *testing.T) {
 		m, err := NewManager(secretKey, "foo")
 		assert.NoError(t, err)
 
-		tokenString, err := m.GenerateJWT("test")
+		tokenString, err := m.GenerateJWT(1)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tokenString)
 
@@ -31,7 +31,7 @@ func TestGenerateJWT(t *testing.T) {
 		})
 		assert.NoError(t, err)
 		assert.NotEmpty(t, tkn)
-		assert.Equal(t, "test", claims.User)
+		assert.Equal(t, uint(1), claims.User)
 		assert.Equal(t, "foo", claims.StandardClaims.Issuer)
 	})
 
