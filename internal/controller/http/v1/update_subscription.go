@@ -32,7 +32,7 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			r.l.Error(fmt.Errorf("Error while reading request body: %s", err))
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
