@@ -10,10 +10,6 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
-// const (
-// 	defaultTickInterval = 10 * time.Second
-// )
-
 type Worker struct {
 	log                logger.Interface
 	period             time.Duration // seconds
