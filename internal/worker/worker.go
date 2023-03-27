@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/kordape/ottct-main-service/internal/event"
+	"github.com/kordape/ottct-main-service/internal/sns"
+	"github.com/kordape/ottct-main-service/internal/sqs"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
@@ -19,12 +18,12 @@ type Worker struct {
 	log                logger.Interface
 	period             time.Duration // seconds
 	quit               chan bool
-	receiveMessageFn   event.ReceiveFakeNewsEventFn
-	deleteMessageFn    event.DeleteEventFn
-	sendNotificationFn event.SendNotificationFn
+	receiveMessageFn   sqs.ReceiveFakeNewsEventFn
+	deleteMessageFn    sqs.DeleteMessageFn
+	sendNotificationFn sns.SendNotificationEventFn
 }
 
-func NewWorker(log logger.Interface, period int, receiveFn event.ReceiveFakeNewsEventFn, deleteFn event.DeleteEventFn, sendNotificationFn event.SendNotificationFn) *Worker {
+func NewWorker(log logger.Interface, period int, receiveFn sqs.ReceiveFakeNewsEventFn, deleteFn sqs.DeleteMessageFn, sendNotificationFn sns.SendNotificationEventFn) *Worker {
 	return &Worker{
 		log:                log,
 		period:             time.Duration(period),
@@ -43,26 +42,35 @@ func (w *Worker) Run() {
 			select {
 			case <-ticker.C:
 				ctx := context.Background()
-				fakeNews, err := w.receiveMessageFn(ctx)
+				fakeNewsEvent, receiptHandle, err := w.receiveMessageFn(ctx)
 				if err != nil {
 					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
 					continue
 				}
-				if fakeNews == nil {
+				if fakeNewsEvent == nil {
 					w.log.Debug("no new messages available")
 					continue
 				}
 
-				w.log.Debug(fmt.Sprintf("received message: %s", fakeNews))
+				w.log.Debug("Received fake news event.")
 
 				// TODO get all users subscribed to entity
 
-				err = w.sendNotificationFn(ctx, event.SendNotificationEvent{
+				err = w.sendNotificationFn(ctx, sns.SendNotificationEvent{
 					// TODO populate values
 				})
 				if err != nil {
 					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
+					continue
 				}
+				w.log.Debug("Notifications sent.")
+
+				err = w.deleteMessageFn(ctx, receiptHandle)
+				if err != nil {
+					w.log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
+					continue
+				}
+				w.log.Debug("Message successfully deleted from queue.")
 
 			case <-w.quit:
 				ticker.Stop()
@@ -76,62 +84,8 @@ func (w *Worker) Run() {
 // 	close(w.quit)
 // }
 
-func (w *Worker) sendNotification(fakeNews event.FakeNews) error {
+func (w *Worker) sendNotification(context.Context, sns.SendNotificationEvent) error {
 	// TODO: implement
 	// send email to sqs
-	w.log.Debug("processing fake news event")
 	return nil
-}
-
-type SQSMessage struct {
-	Message       string
-	ReceiptHandle string
-}
-
-type ReceiveMessageFromQueue func(context context.Context) (*SQSMessage, error)
-
-func ReceiveMessageFromQueueFn(sqsClient *sqs.SQS, queue string) ReceiveMessageFromQueue {
-	return func(context context.Context) (*SQSMessage, error) {
-		input := &sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(queue),
-			MaxNumberOfMessages: aws.Int64(1),
-			VisibilityTimeout:   aws.Int64(5),
-			// AttributeNames: []*string{
-			// 	aws.String(sqs.MessageSystemAttributeNameSentTimestamp),
-			// },
-		}
-
-		output, err := sqsClient.ReceiveMessageWithContext(context, input)
-		if err != nil {
-			return nil, fmt.Errorf("cannot receive sqs message: %w", err)
-		}
-
-		if len(output.Messages) == 0 {
-			return nil, nil
-		}
-
-		return &SQSMessage{
-			Message:       output.Messages[0].String(),
-			ReceiptHandle: *output.Messages[0].ReceiptHandle,
-		}, nil
-	}
-}
-
-type DeleteMessageFromQueue func(context context.Context, receiptHandle string) error
-
-func DeleteMessageFromQueueFn(sqsClient *sqs.SQS, queue string) DeleteMessageFromQueue {
-	return func(context context.Context, receiptHandle string) error {
-
-		input := &sqs.DeleteMessageInput{
-			QueueUrl:      aws.String(queue),
-			ReceiptHandle: aws.String(receiptHandle),
-		}
-
-		_, err := sqsClient.DeleteMessageWithContext(context, input)
-		if err != nil {
-			return fmt.Errorf("cannot delete sqs message: %w", err)
-		}
-
-		return nil
-	}
 }

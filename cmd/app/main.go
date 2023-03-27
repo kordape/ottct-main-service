@@ -10,10 +10,11 @@ import (
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/app"
-	"github.com/kordape/ottct-main-service/internal/event"
+	"github.com/kordape/ottct-main-service/internal/sns"
+	"github.com/kordape/ottct-main-service/internal/sqs"
 	"github.com/kordape/ottct-main-service/internal/worker"
 	"github.com/kordape/ottct-main-service/pkg/logger"
-	"github.com/kordape/ottct-main-service/pkg/sqs"
+	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
 )
 
 const (
@@ -46,14 +47,14 @@ func main() {
 		panic("configuration error: " + err.Error())
 	}
 
-	sqsClient := sqs.NewClient(sqsservice.NewFromConfig(awsCfg), os.Getenv("QUEUE_URL"))
+	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), os.Getenv("QUEUE_URL"))
 
 	w := worker.NewWorker(
 		log,
 		defaultTickInterval,
-		event.ReceiveFakeNewsEventFnBuilder(sqsClient, log),
-		event.DeleteEventFnBuilder(sqsClient, log),
-		event.SendNotificationFnBuilder(),
+		sqs.ReceiveFakeNewsEventFnBuilder(sqsClient, log),
+		sqs.DeleteMessageFnBuilder(sqsClient, log),
+		sns.SendNotificationEventFnBuilder(),
 	)
 
 	// TODO context?

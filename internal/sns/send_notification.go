@@ -1,4 +1,4 @@
-package event
+package sns
 
 import "context"
 
@@ -8,9 +8,9 @@ type SendNotificationEvent struct {
 	Content   string
 }
 
-type SendNotificationFn func(ctx context.Context, event SendNotificationEvent) error
+type SendNotificationEventFn func(ctx context.Context, event SendNotificationEvent) error
 
-func SendNotificationFnBuilder( /*TODO pass ses or sns client (and topic name)*/ ) SendNotificationFn {
+func SendNotificationEventFnBuilder( /*TODO pass ses or sns client (and topic name)*/ ) SendNotificationEventFn {
 	return func(ctx context.Context, event SendNotificationEvent) error {
 		// TODO implement
 		return nil
