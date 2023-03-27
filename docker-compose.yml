@@ -4,8 +4,9 @@ networks:
     driver: bridge
 services:
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack:latest
     container_name: localstack
+    hostname: localstack
     healthcheck:
       test:
         - CMD
@@ -18,9 +19,15 @@ services:
     ports:
       - 4566:4566
     environment:
-      - SERVICES=sqs
+      SERVICES: 'sqs'
+      DOCKER_HOST: 'unix:///var/run/docker.sock'
+      AWS_REGION: 'us-east-1'
+      HOSTNAME_EXTERNAL: 'localstack'
+      HOST_TMP_FOLDER: '/tmp/localstack'
     volumes:
-      - "./init-scripts:/docker-entrypoint-initaws.d"
+      - "./init-scripts:/docker-entrypoint-initaws.d/"
+      - "./.localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - ottct-main-network
   app:
@@ -30,6 +37,11 @@ services:
     environment:
       DB_URL: 'postgres://postgres:tests@db:5432/ottct_main_service'
       SECRET_KEY: 's+76qrrI53tqP666lQla3t+pitXrAsYQQbEn/55JQKA='
+      QUEUE_URL: 'http://localhost:4566/000000000000/default-fake-news'
+      AWS_REGION: 'us-east-1'
+      AWS_PROFILE: 'user'
+      AWS_ACCESS_KEY_ID: 'foobar'
+      AWS_SECRET_ACCESS_KEY: 'foobar'
     ports:
       - 8080:8080
     networks:

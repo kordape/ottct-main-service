@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/kordape/ottct-main-service/internal/event"
+	"github.com/kordape/ottct-main-service/pkg/logger"
 )
 
 // const (
@@ -15,16 +16,22 @@ import (
 // )
 
 type Worker struct {
-	period    time.Duration // seconds
-	quit      chan bool
-	receiveFn event.ReceiveFakeNewsEventFn
+	log                logger.Interface
+	period             time.Duration // seconds
+	quit               chan bool
+	receiveMessageFn   event.ReceiveFakeNewsEventFn
+	deleteMessageFn    event.DeleteEventFn
+	sendNotificationFn event.SendNotificationFn
 }
 
-func NewWorker(period int, receiveFn event.ReceiveFakeNewsEventFn) *Worker {
+func NewWorker(log logger.Interface, period int, receiveFn event.ReceiveFakeNewsEventFn, deleteFn event.DeleteEventFn, sendNotificationFn event.SendNotificationFn) *Worker {
 	return &Worker{
-		period:    time.Duration(period),
-		quit:      make(chan bool),
-		receiveFn: receiveFn,
+		log:                log,
+		period:             time.Duration(period),
+		quit:               make(chan bool),
+		receiveMessageFn:   receiveFn,
+		deleteMessageFn:    deleteFn,
+		sendNotificationFn: sendNotificationFn,
 	}
 }
 
@@ -35,7 +42,27 @@ func (w *Worker) Run() {
 		for {
 			select {
 			case <-ticker.C:
-				w.receiveFn(context.Background())
+				ctx := context.Background()
+				fakeNews, err := w.receiveMessageFn(ctx)
+				if err != nil {
+					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
+					continue
+				}
+				if fakeNews == nil {
+					w.log.Debug("no new messages available")
+					continue
+				}
+
+				w.log.Debug(fmt.Sprintf("received message: %s", fakeNews))
+
+				// TODO get all users subscribed to entity
+
+				err = w.sendNotificationFn(ctx, event.SendNotificationEvent{
+					// TODO populate values
+				})
+				if err != nil {
+					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
+				}
 
 			case <-w.quit:
 				ticker.Stop()
@@ -45,8 +72,15 @@ func (w *Worker) Run() {
 	}()
 }
 
-func (w *Worker) Stop() {
-	close(w.quit)
+// func (w *Worker) Stop() {
+// 	close(w.quit)
+// }
+
+func (w *Worker) sendNotification(fakeNews event.FakeNews) error {
+	// TODO: implement
+	// send email to sqs
+	w.log.Debug("processing fake news event")
+	return nil
 }
 
 type SQSMessage struct {
