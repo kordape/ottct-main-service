@@ -6,10 +6,11 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/kordape/ottct-main-service/internal/handler"
+	model "github.com/kordape/ottct-main-service/pkg/db"
 )
 
 func (db *DB) CreateUser(user handler.User) error {
-	u := User{
+	u := model.User{
 		Email:    user.Email,
 		Password: user.Password,
 		Phone:    user.Phone,
@@ -21,7 +22,7 @@ func (db *DB) CreateUser(user handler.User) error {
 }
 
 func (db *DB) GetUserByCredentials(email string, password string) (handler.User, error) {
-	u := User{}
+	u := model.User{}
 
 	err := db.db.Where("email = ? AND password = ?", email, password).First(&u).Error
 

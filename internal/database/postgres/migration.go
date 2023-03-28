@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-gormigrate/gormigrate/v2"
+	model "github.com/kordape/ottct-main-service/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +13,7 @@ func (db *DB) Migrate() error {
 		{
 			ID: "202303140000",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&Entity{})
+				return tx.AutoMigrate(&model.Entity{})
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.Migrator().DropTable("entities")
@@ -21,7 +22,7 @@ func (db *DB) Migrate() error {
 		{
 			ID: "202302240000",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&User{})
+				return tx.AutoMigrate(&model.User{})
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.Migrator().DropTable("users")

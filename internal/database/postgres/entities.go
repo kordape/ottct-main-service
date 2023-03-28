@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/kordape/ottct-main-service/internal/handler"
+	model "github.com/kordape/ottct-main-service/pkg/db"
 	"gorm.io/gorm"
 )
 
 func (db *DB) GetEntities() ([]handler.Entity, error) {
-	var persistentEntities []Entity
+	var persistentEntities []model.Entity
 	err := db.db.Find(&persistentEntities).Error
 	if err != nil {
 		return nil, fmt.Errorf("Error getting entities from db: %w", err)
@@ -28,7 +29,7 @@ func (db *DB) GetEntities() ([]handler.Entity, error) {
 }
 
 func (db *DB) GetEntity(entityId string) (*handler.Entity, error) {
-	var entity Entity
+	var entity model.Entity
 
 	err := db.db.First(&entity, entityId).Error
 	if err != nil {
