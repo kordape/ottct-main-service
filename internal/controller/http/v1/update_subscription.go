@@ -18,7 +18,7 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 
 		entity, err := entityManager.GetEntity(c.Param("entityid"))
 		if err != nil {
-			r.l.Error(fmt.Errorf("Error while getting entity: %s", err))
+			r.l.Error(fmt.Errorf("error while getting entity: %s", err))
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -31,33 +31,32 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 		var request api.UpdateSubscriptionRequest
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			r.l.Error(fmt.Errorf("Error while reading request body: %s", err))
+			r.l.Error(fmt.Errorf("error while reading request body: %s", err))
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		err = json.Unmarshal(requestBody, &request)
 		if err != nil {
-			r.l.Error(fmt.Errorf("Error while unmarshaling UpdateSubscription request: %v", err))
+			r.l.Error(fmt.Errorf("error while unmarshaling UpdateSubscription request: %v", err))
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		claims, err := tokenManager.GetClaimsFromJWT(c.GetHeader("Authorization"))
 		if err != nil {
-			r.l.Error(fmt.Errorf("Error getting claims from bearer token: %w", err))
+			r.l.Error(fmt.Errorf("error getting claims from bearer token: %w", err))
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
-		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request.Subscribe)
+		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request)
 		if err != nil {
-			r.l.Error(fmt.Errorf("Error while updating subscription: %s", err))
+			r.l.Error(fmt.Errorf("error while updating subscription: %s", err))
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
 		c.Status(http.StatusOK)
-		return
 	}
 }
