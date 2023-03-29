@@ -1,11 +1,17 @@
 package postgres
 
 import (
+	_ "embed"
 	"fmt"
 
 	"github.com/go-gormigrate/gormigrate/v2"
 	model "github.com/kordape/ottct-main-service/pkg/db"
 	"gorm.io/gorm"
+)
+
+var (
+	//go:embed seed/202303282200.sql
+	seed202303282200 string
 )
 
 func (db *DB) Migrate() error {
@@ -26,6 +32,12 @@ func (db *DB) Migrate() error {
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.Migrator().DropTable("users")
+			},
+		},
+		{
+			ID: "202303282200",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec(seed202303282200).Error
 			},
 		},
 	})
