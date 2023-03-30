@@ -60,6 +60,6 @@ func NewRoutes(
 
 	tweets := handler.Group("/tweets", authMiddleware)
 	{
-		tweets.POST("/", r.newGetTweetsHandler(twitterManager))
+		tweets.GET("/", r.newGetTweetsHandler(twitterManager))
 	}
 }

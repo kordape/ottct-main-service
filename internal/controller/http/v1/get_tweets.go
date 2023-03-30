@@ -1,11 +1,11 @@
 package v1
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/internal/handler"
@@ -16,17 +16,11 @@ func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gi
 	return func(c *gin.Context) {
 		r.l.Debug("GetTweets request received")
 
-		request := api.GetTweetsRequest{}
-		requestBody, _ := ioutil.ReadAll(c.Request.Body)
-		r.l.Info(string(requestBody))
-
-		err := json.Unmarshal(requestBody, &request)
-		if err != nil {
-			r.l.Error(fmt.Errorf("Error while unmarshaling GetTweets request: %v", err))
-			c.AbortWithStatusJSON(http.StatusBadRequest, api.GetTweetsResponse{
-				Error: err.Error(),
-			})
-			return
+		request := api.GetTweetsRequest{
+			EntityID:   c.Query("entityId"),
+			From:       toTimeOrZero(c.Query("from")),
+			To:         toTimeOrZero(c.Query("to")),
+			MaxResults: toIntOrZero(c.Query("maxResults")),
 		}
 
 		resp, err := manager.GetTweets(c.Request.Context(), request)
@@ -47,4 +41,27 @@ func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gi
 
 		c.JSON(http.StatusOK, resp)
 	}
+}
+
+func toTimeOrZero(in string) time.Time {
+	var err error
+	out := time.Time{}
+
+	if in != "" {
+		out, err = time.Parse(time.RFC3339, in)
+		if err != nil {
+			return out
+		}
+	}
+
+	return out
+}
+
+func toIntOrZero(in string) int {
+	out, err := strconv.Atoi(in)
+	if err != nil {
+		return 0
+	}
+
+	return out
 }
