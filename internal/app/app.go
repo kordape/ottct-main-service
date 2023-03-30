@@ -3,9 +3,11 @@ package app
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -13,12 +15,14 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/kordape/ottct-main-service/config"
-	"github.com/kordape/ottct-main-service/internal/controller/http"
+	httplayer "github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
+	"github.com/kordape/ottct-poller-service/pkg/predictor"
+	"github.com/kordape/ottct-poller-service/pkg/twitter"
 )
 
 // Run creates objects via constructors.
@@ -55,9 +59,26 @@ func Run(cfg *config.Config) {
 
 	subscriptionsManager := handler.NewSubscriptionManager(db, log)
 
+	twitterManager, err := handler.NewTwitterManager(
+		log,
+		validator.New(),
+		twitter.New(
+			&http.Client{
+				Timeout: 10 * time.Second,
+			},
+			cfg.TwitterBearerKey,
+		),
+		predictor.New(
+			&http.Client{
+				Timeout: 10 * time.Second,
+			},
+			cfg.PredictorURL,
+		),
+	)
+
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager)
+	httplayer.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

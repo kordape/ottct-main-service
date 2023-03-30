@@ -30,6 +30,8 @@ services:
     environment:
       DB_URL: 'postgres://postgres:tests@db:5432/ottct_main_service'
       SECRET_KEY: 's+76qrrI53tqP666lQla3t+pitXrAsYQQbEn/55JQKA='
+      TWITTER_BEARER_KEY: 'AAAAAAAAAAAAAAAAAAAAACXAcgEAAAAAMFkd4RQMKRSjvXUQGIrdZAHNJjg%3DLYqfisQPqvbuXeo0FjwYhrGqJ0eU6MVdHsLIqdvJ368MfZAq9o'
+      PREDICTOR_URL: 'http://ml-main:8080/predict'
     ports:
       - 8080:8080
     networks:
@@ -37,6 +39,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  ml:
+    container_name: ml-main
+    image: ml
+    ports:
+      - 8081:8080
+    networks:
+      - ottct-main-network
   db:
     image: postgres:13.3-alpine
     container_name: db

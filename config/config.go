@@ -9,11 +9,13 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App       `yaml:"app"`
-		HTTP      `yaml:"http"`
-		Log       `yaml:"logger"`
-		DB        `yaml:"db"`
-		SecretKey string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		App              `yaml:"app"`
+		HTTP             `yaml:"http"`
+		Log              `yaml:"logger"`
+		DB               `yaml:"db"`
+		SecretKey        string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		TwitterBearerKey string `env-required:"true" yaml:"twitter_bearer_key" env:"TWITTER_BEARER_KEY"`
+		PredictorURL     string `env-required:"true" yaml:"predictor_url" env:"PREDICTOR_URL"`
 	}
 
 	// App -.
