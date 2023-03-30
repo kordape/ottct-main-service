@@ -53,7 +53,10 @@ func Run(cfg *config.Config) {
 
 	entityManager := handler.NewEntityManager(db, log)
 
-	subscriptionsManager := handler.NewSubscriptionManager(db, log)
+	subscriptionsManager, err := handler.NewSubscriptionManager(db, log, validator.New())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// HTTP Server
 	handler := gin.New()
