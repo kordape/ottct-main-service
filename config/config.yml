@@ -1,6 +1,7 @@
 app:
   name: 'main-service'
   version: '1.0.0'
+  worker_interval: 5
 
 http:
   port: '8080'

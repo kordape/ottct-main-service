@@ -17,10 +17,6 @@ import (
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
 )
 
-const (
-	defaultTickInterval = 5
-)
-
 func main() {
 	// Configuration
 	cfg, err := config.NewConfig()
@@ -51,7 +47,7 @@ func main() {
 
 	w := worker.NewWorker(
 		log,
-		defaultTickInterval,
+		cfg.App.WorkerInterval,
 		sqs.ReceiveFakeNewsEventFnBuilder(sqsClient, log),
 		sqs.DeleteMessageFnBuilder(sqsClient, log),
 		sns.SendNotificationEventFnBuilder(),
