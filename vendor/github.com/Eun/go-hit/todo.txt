@@ -1,3 +1,0 @@
-* Expect().Body().XML()
-* Store().Request().Body().XML()
-* Store().Response().Body().XML()
