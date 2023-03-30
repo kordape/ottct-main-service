@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
@@ -14,11 +15,31 @@ type SubscriptionManager struct {
 	requestValidator *validator.Validate
 }
 
-func NewSubscriptionManager(storage SubscriptionStorage, log logger.Interface, validate *validator.Validate) *SubscriptionManager {
-	return &SubscriptionManager{
-		storage: storage,
-		log:     log,
+func NewSubscriptionManager(storage SubscriptionStorage, log logger.Interface, validate *validator.Validate) (*SubscriptionManager, error) {
+	m := &SubscriptionManager{
+		storage:          storage,
+		log:              log,
+		requestValidator: validate,
 	}
+
+	err := m.validate()
+	if err != nil {
+		return nil, fmt.Errorf("error validation subscription manager: %w", err)
+	}
+
+	return m, nil
+}
+
+func (m SubscriptionManager) validate() error {
+	if m.storage == nil {
+		return errors.New("subscription storage is nil")
+	}
+
+	if m.requestValidator == nil {
+		return errors.New("request validator is nil")
+	}
+
+	return nil
 }
 
 type SubscriptionStorage interface {
@@ -40,15 +61,15 @@ func (m SubscriptionManager) GetSubscriptionsByUser(userId uint) (entities []Ent
 func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, request api.UpdateSubscriptionRequest) error {
 	err := m.requestValidator.Struct(request)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Error validating request: %w", err))
-		return fmt.Errorf("[SubscriptionsManager]  Error validating request: %w", err)
+		m.log.Error(fmt.Errorf("[SubscriptionManager] Error validating request: %w", err))
+		return ErrInvalidRequest
 	}
 
 	if request.Subscribe {
 		err := m.storage.AddSubscription(userId, entityId)
 		if err != nil {
 			m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
-			return fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
+			return fmt.Errorf("subscription storage error: %w", err)
 		}
 
 		return nil
@@ -57,7 +78,7 @@ func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, re
 	err = m.storage.DeleteSubscription(userId, entityId)
 	if err != nil {
 		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
-		return fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
+		return fmt.Errorf("subscription storage error: %w", err)
 	}
 
 	return nil

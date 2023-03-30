@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -52,6 +53,12 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 
 		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request)
 		if err != nil {
+			if errors.Is(err, handler.ErrInvalidRequest) {
+				r.l.Error(fmt.Errorf("error while updating subscription: %s", err))
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
+			
 			r.l.Error(fmt.Errorf("error while updating subscription: %s", err))
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
