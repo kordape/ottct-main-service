@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -33,8 +33,8 @@ func main() {
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			PartitionID:       "aws",
-			URL:               "http://localstack:4566",
-			SigningRegion:     os.Getenv("AWS_REGION"),
+			URL:               cfg.AWS.EndpointUrl,
+			SigningRegion:     cfg.AWS.Region,
 			HostnameImmutable: true,
 		}, nil
 	})
@@ -47,7 +47,7 @@ func main() {
 		panic("configuration error: " + err.Error())
 	}
 
-	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), os.Getenv("QUEUE_URL"))
+	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), fmt.Sprintf("%s/000000000000/%s", cfg.AWS.EndpointUrl, cfg.AWS.FakeNewsQueueName))
 
 	w := worker.NewWorker(
 		log,

@@ -13,6 +13,7 @@ type (
 		HTTP      `yaml:"http"`
 		Log       `yaml:"logger"`
 		DB        `yaml:"db"`
+		AWS       `yaml:"aws"`
 		SecretKey string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
 	}
 
@@ -34,6 +35,12 @@ type (
 	// Log -.
 	Log struct {
 		Level string `env-required:"true" yaml:"log_level" env:"LOG_LEVEL"`
+	}
+
+	AWS struct {
+		EndpointUrl       string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
+		Region            string `env-required:"true" yaml:"aws_region" env:"AWS_REGION"`
+		FakeNewsQueueName string `env-required:"true" yaml:"fake_news_queue_name" env:"FAKE_NEWS_QUEUE_NAME"`
 	}
 )
 

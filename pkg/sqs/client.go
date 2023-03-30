@@ -42,9 +42,9 @@ type Message struct {
 }
 
 // NewClient returns a new SQS client.
-func NewClient(sqsAPI *sqs.Client, queueURL string) Client {
+func NewClient(sqsClient *sqs.Client, queueURL string) Client {
 	return &client{
-		SQS: sqsAPI,
+		SQS: sqsClient,
 		URL: queueURL,
 	}
 }

@@ -37,7 +37,8 @@ services:
     environment:
       DB_URL: 'postgres://postgres:tests@db:5432/ottct_main_service'
       SECRET_KEY: 's+76qrrI53tqP666lQla3t+pitXrAsYQQbEn/55JQKA='
-      QUEUE_URL: 'http://localhost:4566/000000000000/default-fake-news'
+      AWS_ENDPOINT_URL: 'http://localstack:4566'
+      FAKE_NEWS_QUEUE_NAME: 'default-fake-news'
       AWS_REGION: 'us-east-1'
       AWS_PROFILE: 'user'
       AWS_ACCESS_KEY_ID: 'foobar'
