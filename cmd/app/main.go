@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
+
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/app"
 	"github.com/kordape/ottct-main-service/internal/sns"
@@ -53,8 +54,9 @@ func main() {
 		sns.SendNotificationEventFnBuilder(),
 	)
 
+	// Run sqs poller worker (as a background process)
 	w.Run()
 
-	// Run
+	// Run app
 	app.Run(cfg)
 }

@@ -79,12 +79,8 @@ func (w *Worker) Run() {
 	}()
 }
 
-// func (w *Worker) Stop() {
-// 	close(w.quit)
-// }
-
 func (w *Worker) sendNotification(context.Context, sns.SendNotificationEvent) error {
 	// TODO: implement
-	// send email to sqs
+	// send email to subscribed user
 	return nil
 }
