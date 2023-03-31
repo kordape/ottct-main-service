@@ -25,9 +25,16 @@ func WithWaitTimeSeconds(s int32) ReceiveOption {
 	}
 }
 
+// WithMaxNumberOfMessages returns a ReceiveOption which setup MaxNumberOfMessages
+func WithMaxNumberOfMessages(s int32) ReceiveOption {
+	return func(input *sqs.ReceiveMessageInput) {
+		input.MaxNumberOfMessages = s
+	}
+}
+
 // Client represents a client that communicates with Amazon SQS about the request.
 type Client interface {
-	ReceiveMessage(ctx context.Context, options ...ReceiveOption) (*Message, error)
+	ReceiveMessages(ctx context.Context, options ...ReceiveOption) ([]Message, error)
 	DeleteMessage(ctx context.Context, receiptHandle string) error
 }
 
@@ -49,10 +56,9 @@ func NewClient(sqsClient *sqs.Client, queueURL string) Client {
 	}
 }
 
-func (c client) ReceiveMessage(ctx context.Context, options ...ReceiveOption) (*Message, error) {
+func (c client) ReceiveMessages(ctx context.Context, options ...ReceiveOption) ([]Message, error) {
 	input := &sqs.ReceiveMessageInput{
-		QueueUrl:            aws.String(c.URL),
-		MaxNumberOfMessages: *aws.Int32(1),
+		QueueUrl: aws.String(c.URL),
 	}
 
 	for _, option := range options {
@@ -70,10 +76,16 @@ func (c client) ReceiveMessage(ctx context.Context, options ...ReceiveOption) (*
 		return nil, nil
 	}
 
-	return &Message{
-		ReceiptHandle: *output.Messages[0].ReceiptHandle,
-		Body:          *output.Messages[0].Body,
-	}, nil
+	result := make([]Message, len(output.Messages))
+
+	for i, m := range output.Messages {
+		result[i] = Message{
+			ReceiptHandle: *m.ReceiptHandle,
+			Body:          *m.Body,
+		}
+	}
+
+	return result, nil
 }
 
 func (c client) DeleteMessage(ctx context.Context, receiptHandle string) error {

@@ -21,7 +21,7 @@ type (
 	App struct {
 		Name           string `env-required:"true" yaml:"name" env:"APP_NAME"`
 		Version        string `env-required:"true" yaml:"version" env:"APP_VERSION"`
-		WorkerInterval int    `env-required:"true" yaml:"worker_interval" env:"WORKER_INTERVAL"`
+		PollerInterval int    `env-required:"true" yaml:"poller_interval" env:"POLLER_INTERVAL"`
 	}
 
 	// HTTP -.

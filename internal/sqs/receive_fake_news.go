@@ -9,24 +9,28 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/sqs"
 )
 
-type ReceiveFakeNewsEventFn func(ctx context.Context) (*sqs.FakeNewsEvent, string, error)
+type ReceiveFakeNewsEventsFn func(ctx context.Context) ([]sqs.FakeNewsEvent, error)
 
-func ReceiveFakeNewsEventFnBuilder(client sqs.Client, log logger.Interface) ReceiveFakeNewsEventFn {
-	return func(ctx context.Context) (*sqs.FakeNewsEvent, string, error) {
-		msg, err := client.ReceiveMessage(ctx, sqs.WithVisibilityTimeout(10))
+func ReceiveFakeNewsEventsFnBuilder(client sqs.Client, log logger.Interface) ReceiveFakeNewsEventsFn {
+	return func(ctx context.Context) ([]sqs.FakeNewsEvent, error) {
+		msgs, err := client.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
 		if err != nil {
-			return nil, "", fmt.Errorf("error receiving message: %s", err)
-		}
-		if msg == nil {
-			return nil, "", nil
+			return nil, fmt.Errorf("error receiving message: %s", err)
 		}
 
-		var fakeNews sqs.FakeNewsEvent
-		err = json.Unmarshal([]byte(msg.Body), &fakeNews)
-		if err != nil {
-			return nil, "", fmt.Errorf("error unmarshalling message body into FakeNewsEvent: %s", err)
+		events := make([]sqs.FakeNewsEvent, len(msgs))
+		for i, msg := range msgs {
+			var event sqs.FakeNewsEvent
+			err = json.Unmarshal([]byte(msg.Body), &event)
+			if err != nil {
+				return nil, fmt.Errorf("error unmarshalling message body into FakeNewsEvent: %s", err)
+			}
+
+			event.ReceiptHandle = msg.ReceiptHandle
+
+			events[i] = event
 		}
 
-		return &fakeNews, msg.ReceiptHandle, nil
+		return events, nil
 	}
 }

@@ -14,17 +14,17 @@ type Worker struct {
 	log                logger.Interface
 	period             time.Duration // seconds
 	quit               chan bool
-	receiveMessageFn   sqs.ReceiveFakeNewsEventFn
+	receiveMessagesFn  sqs.ReceiveFakeNewsEventsFn
 	deleteMessageFn    sqs.DeleteMessageFn
 	sendNotificationFn sns.SendNotificationEventFn
 }
 
-func NewWorker(log logger.Interface, period int, receiveFn sqs.ReceiveFakeNewsEventFn, deleteFn sqs.DeleteMessageFn, sendNotificationFn sns.SendNotificationEventFn) *Worker {
+func NewWorker(log logger.Interface, period int, receiveFn sqs.ReceiveFakeNewsEventsFn, deleteFn sqs.DeleteMessageFn, sendNotificationFn sns.SendNotificationEventFn) *Worker {
 	return &Worker{
 		log:                log,
 		period:             time.Duration(period),
 		quit:               make(chan bool),
-		receiveMessageFn:   receiveFn,
+		receiveMessagesFn:  receiveFn,
 		deleteMessageFn:    deleteFn,
 		sendNotificationFn: sendNotificationFn,
 	}
@@ -38,35 +38,38 @@ func (w *Worker) Run() {
 			select {
 			case <-ticker.C:
 				ctx := context.Background()
-				fakeNewsEvent, receiptHandle, err := w.receiveMessageFn(ctx)
+				events, err := w.receiveMessagesFn(ctx)
 				if err != nil {
 					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
 					continue
 				}
-				if fakeNewsEvent == nil {
+				if len(events) == 0 {
 					w.log.Debug("no new messages available")
 					continue
 				}
 
-				w.log.Debug("Received fake news event.")
+				w.log.Debug("Received fake news events.")
 
 				// TODO get all users subscribed to entity
 
-				err = w.sendNotificationFn(ctx, sns.SendNotificationEvent{
-					// TODO populate values
-				})
-				if err != nil {
-					w.log.Error(fmt.Sprintf("error receiving message: %s", err))
-					continue
-				}
-				w.log.Debug("Notifications sent.")
+				for _, e := range events {
+					err = w.sendNotificationFn(ctx, sns.SendNotificationEvent{
+						// TODO populate values
+					})
+					if err != nil {
+						w.log.Error(fmt.Sprintf("error sending notification: %s", err))
+						continue
+					}
+					w.log.Debug("Notifications sent.")
 
-				err = w.deleteMessageFn(ctx, receiptHandle)
-				if err != nil {
-					w.log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
-					continue
+					err = w.deleteMessageFn(ctx, e.ReceiptHandle)
+					if err != nil {
+						w.log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
+						continue
+					}
+
+					w.log.Debug("Message successfully deleted from queue.")
 				}
-				w.log.Debug("Message successfully deleted from queue.")
 
 			case <-w.quit:
 				ticker.Stop()

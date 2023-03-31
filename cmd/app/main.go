@@ -47,8 +47,8 @@ func main() {
 
 	w := worker.NewWorker(
 		log,
-		cfg.App.WorkerInterval,
-		sqs.ReceiveFakeNewsEventFnBuilder(sqsClient, log),
+		cfg.App.PollerInterval,
+		sqs.ReceiveFakeNewsEventsFnBuilder(sqsClient, log),
 		sqs.DeleteMessageFnBuilder(sqsClient, log),
 		sns.SendNotificationEventFnBuilder(),
 	)
