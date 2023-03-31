@@ -53,7 +53,6 @@ func main() {
 		sns.SendNotificationEventFnBuilder(),
 	)
 
-	// TODO context?
 	w.Run()
 
 	// Run
