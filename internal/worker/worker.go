@@ -6,30 +6,30 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/internal/sns"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/sqs"
 )
 
 type Worker struct {
-	log                logger.Interface
-	period             time.Duration // seconds
-	quit               chan bool
+	period            time.Duration // seconds
+	quit              chan bool
 	fakeNewsQueue      sqs.Client
-	sendNotificationFn sns.SendNotificationEventFn
+	sendEmailFn       sns.SendFakeNewsEmailFn
 }
 
-func NewWorker(log logger.Interface, period int, fakeNewsQueue sqs.Client, sendNotificationFn sns.SendNotificationEventFn) *Worker {
+func NewWorker(log logger.Interface, period int, fakeNewsQueue sqs.Client, sendEmailFn sns.SendFakeNewsEmailFn) *Worker {
 	return &Worker{
-		log:           log,
-		period:        time.Duration(period),
+]		period:        time.Duration(period),
 		quit:          make(chan bool),
-		sendNotificationFn: sendNotificationFn,
 		fakeNewsQueue: fakeNewsQueue,
+		sendEmailFn:       sendEmailFn,
+
 	}
 }
 
-func (w *Worker) Run() {
+func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.SubscriptionManager) {
 	ticker := time.NewTicker(w.period * time.Second)
 
 	go func() {
@@ -65,30 +65,42 @@ func (w *Worker) Run() {
 				}()
 				if err != nil {
 					w.log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
-					continue
-				}
 
-				w.log.Debug("Received fake news events.")
+				eventsLen := len(events)
 
-				// TODO get all users subscribed to entity
+				log.Debug(fmt.Sprintf("Received %d fake news event(s).", eventsLen))
 
-				for _, e := range events {
-					err = w.sendNotificationFn(ctx, sns.SendNotificationEvent{
-						// TODO populate values
-					})
+				for i, e := range events {
+					log.Debug("Started handling message %d out of %d.", i+1, eventsLen)
+
+					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID)
 					if err != nil {
-						w.log.Error(fmt.Sprintf("Error sending notification: %s", err))
+						log.Error(fmt.Sprintf("Error sending getting subscribed users: %s", err))
 						continue
 					}
-					w.log.Debug("Notifications about the fake news event sent!")
+
+					// TODO idempotency
+
+					for _, user := range users {
+						log.Debug(fmt.Sprintf("Attempting to send email to user with id: %d.", user.Id))
+
+						err = w.sendEmailFn(ctx, user, e.EntityID, e.TweetContent)
+						if err != nil {
+							log.Error(fmt.Sprintf("Error sending email to subscribed user with id %d: %s", user.Id, err))
+							continue
+
+						}
+
+						log.Debug(fmt.Sprintf("Email sent to user with id: %d.", user.Id))
+					}
 
 					err = w.fakeNewsQueue.DeleteMessage(ctx, e.ReceiptHandle)
 					if err != nil {
-						w.log.Error(fmt.Sprintf("Error deleting message from queue: %s", err))
+						log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
 						continue
 					}
 
-					w.log.Debug("Message successfully deleted from queue!")
+					log.Debug(fmt.Sprintf("Successfully deleted message %d out of %d from queue.", i+1, eventsLen))
 				}
 
 			case <-w.quit:
@@ -97,10 +109,4 @@ func (w *Worker) Run() {
 			}
 		}
 	}()
-}
-
-func (w *Worker) sendNotification(context.Context, sns.SendNotificationEvent) error {
-	// TODO: implement
-	// send email to subscribed user
-	return nil
 }

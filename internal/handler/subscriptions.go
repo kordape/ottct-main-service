@@ -44,6 +44,7 @@ func (m SubscriptionManager) validate() error {
 
 type SubscriptionStorage interface {
 	GetSubscriptionsByUser(userId uint) ([]Entity, error)
+	GetSubscriptionsByEntity(entityId string) ([]User, error)
 	AddSubscription(userId uint, entityId string) error
 	DeleteSubscription(userId uint, entityId string) error
 }
@@ -52,6 +53,16 @@ func (m SubscriptionManager) GetSubscriptionsByUser(userId uint) (entities []Ent
 	entities, err = m.storage.GetSubscriptionsByUser(userId)
 	if err != nil {
 		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get user's subscriptions: %w", err))
+		return nil, fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
+	}
+
+	return
+}
+
+func (m SubscriptionManager) GetSubscriptionsByEntity(entityId string) (users []User, err error) {
+	users, err = m.storage.GetSubscriptionsByEntity(entityId)
+	if err != nil {
+		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get subscriptions by entity: %w", err))
 		return nil, fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
 	}
 

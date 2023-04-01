@@ -19,7 +19,7 @@ services:
     ports:
       - 4566:4566
     environment:
-      SERVICES: 'sqs'
+      SERVICES: "sqs,ses"
       DOCKER_HOST: 'unix:///var/run/docker.sock'
       AWS_REGION: 'us-east-1'
       HOSTNAME_EXTERNAL: 'localstack'
