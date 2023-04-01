@@ -21,7 +21,7 @@ const (
 
 type SendFakeNewsEmailFn func(ctx context.Context, user handler.User, entityId, tweet string) error
 
-func SendFakeNewsEmailFnBuilder(sesClient *sesv2.Client) SendFakeNewsEmailFn {
+func SendFakeNewsEmailFnBuilder(sesClient *sesv2.Client, sender string) SendFakeNewsEmailFn {
 	return func(ctx context.Context, user handler.User, entity string, tweet string) error {
 		input := &sesv2.SendEmailInput{
 			Destination: &types.Destination{
@@ -42,7 +42,7 @@ func SendFakeNewsEmailFnBuilder(sesClient *sesv2.Client) SendFakeNewsEmailFn {
 					},
 				},
 			},
-			FromEmailAddress: aws.String("admin@admin.com"),
+			FromEmailAddress: aws.String(sender),
 		}
 
 		// Attempt to send the email.

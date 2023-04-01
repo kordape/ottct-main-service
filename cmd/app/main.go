@@ -87,7 +87,7 @@ func main() {
 		cfg.App.PollerInterval,
 		sqs.ReceiveFakeNewsEventsFnBuilder(sqsClient, log),
 		sqs.DeleteMessageFnBuilder(sqsClient, log),
-		sns.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg)),
+		sns.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
 	)
 
 	// Run sqs poller worker (as a background process)
