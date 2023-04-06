@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/kordape/ottct-main-service/internal/handler"
-	"github.com/kordape/ottct-main-service/internal/sns"
+	"github.com/kordape/ottct-main-service/internal/ses"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/sqs"
 )
@@ -16,10 +16,10 @@ type Worker struct {
 	period        time.Duration // seconds
 	quit          chan bool
 	fakeNewsQueue sqs.Client
-	sendEmailFn   sns.SendFakeNewsEmailFn
+	sendEmailFn   ses.SendFakeNewsEmailFn
 }
 
-func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn sns.SendFakeNewsEmailFn) *Worker {
+func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn ses.SendFakeNewsEmailFn) *Worker {
 	return &Worker{
 		period:        time.Duration(period),
 		quit:          make(chan bool),
@@ -81,8 +81,8 @@ func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.Subscri
 					
 					for _, user := range users {
 						log.Debug(fmt.Sprintf("Attempting to send email to user with id: %d.", user.Id))
-						
-						// TODO how should we handle if sending email to one user fails? 
+
+						// TODO how should we handle if sending email to one user fails?
 
 						err = w.sendEmailFn(ctx, user, e.EntityID, e.TweetContent)
 						if err != nil {

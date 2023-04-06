@@ -1,4 +1,4 @@
-package sns
+package ses
 
 import (
 	"context"

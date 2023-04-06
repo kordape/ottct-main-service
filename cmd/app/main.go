@@ -16,7 +16,7 @@ import (
 	"github.com/kordape/ottct-main-service/internal/app"
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
 	"github.com/kordape/ottct-main-service/internal/handler"
-	"github.com/kordape/ottct-main-service/internal/sns"
+	"github.com/kordape/ottct-main-service/internal/ses"
 	"github.com/kordape/ottct-main-service/internal/worker"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
@@ -49,7 +49,7 @@ func main() {
 		panic("configuration error: " + err.Error())
 	}
 
-	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg),  cfg.AWS.FakeNewsQueueUrl)
+	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), cfg.AWS.FakeNewsQueueUrl)
 
 	dbClient, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
 	if err != nil {
@@ -86,7 +86,7 @@ func main() {
 	w := worker.NewWorker(
 		cfg.App.PollerInterval,
 		sqsClient,
-		sns.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
+		ses.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
 	)
 
 	// Run sqs poller worker (as a background process)
