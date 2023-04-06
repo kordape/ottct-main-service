@@ -49,7 +49,7 @@ func main() {
 		panic("configuration error: " + err.Error())
 	}
 
-	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), fmt.Sprintf("%s/000000000000/%s", cfg.AWS.EndpointUrl, cfg.AWS.FakeNewsQueueName))
+	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg),  cfg.AWS.FakeNewsQueueUrl)
 
 	dbClient, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
 	if err != nil {
@@ -85,8 +85,7 @@ func main() {
 
 	w := worker.NewWorker(
 		cfg.App.PollerInterval,
-		sqs.ReceiveFakeNewsEventsFnBuilder(sqsClient, log),
-		sqs.DeleteMessageFnBuilder(sqsClient, log),
+		sqsClient,
 		sns.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
 	)
 

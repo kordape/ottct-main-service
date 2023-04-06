@@ -13,19 +13,18 @@ import (
 )
 
 type Worker struct {
-	period            time.Duration // seconds
-	quit              chan bool
-	fakeNewsQueue      sqs.Client
-	sendEmailFn       sns.SendFakeNewsEmailFn
+	period        time.Duration // seconds
+	quit          chan bool
+	fakeNewsQueue sqs.Client
+	sendEmailFn   sns.SendFakeNewsEmailFn
 }
 
-func NewWorker(log logger.Interface, period int, fakeNewsQueue sqs.Client, sendEmailFn sns.SendFakeNewsEmailFn) *Worker {
+func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn sns.SendFakeNewsEmailFn) *Worker {
 	return &Worker{
-]		period:        time.Duration(period),
+		period:        time.Duration(period),
 		quit:          make(chan bool),
 		fakeNewsQueue: fakeNewsQueue,
-		sendEmailFn:       sendEmailFn,
-
+		sendEmailFn:   sendEmailFn,
 	}
 }
 
@@ -39,11 +38,11 @@ func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.Subscri
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
 				if err != nil {
-					w.log.Error(fmt.Sprintf("Error receiving message: %s", err))
+					log.Error(fmt.Sprintf("Error receiving message: %s", err))
 					continue
 				}
 				if len(messages) == 0 {
-					w.log.Debug("No new messages available...")
+					log.Debug("No new messages available...")
 					continue
 				}
 
@@ -64,8 +63,8 @@ func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.Subscri
 					return events, nil
 				}()
 				if err != nil {
-					w.log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
-
+					log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
+				}
 				eventsLen := len(events)
 
 				log.Debug(fmt.Sprintf("Received %d fake news event(s).", eventsLen))
@@ -79,10 +78,11 @@ func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.Subscri
 						continue
 					}
 
-					// TODO idempotency
-
+					
 					for _, user := range users {
 						log.Debug(fmt.Sprintf("Attempting to send email to user with id: %d.", user.Id))
+						
+						// TODO how should we handle if sending email to one user fails? 
 
 						err = w.sendEmailFn(ctx, user, e.EntityID, e.TweetContent)
 						if err != nil {
