@@ -39,9 +39,9 @@ type (
 	}
 
 	AWS struct {
-		EndpointUrl       string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
-		Region            string `env-required:"true" yaml:"aws_region" env:"AWS_REGION"`
-		FakeNewsQueueName string `env-required:"true" yaml:"fake_news_queue_name" env:"FAKE_NEWS_QUEUE_NAME"`
+		EndpointUrl      string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
+		Region           string `env-required:"true" yaml:"aws_region" env:"AWS_REGION"`
+		FakeNewsQueueUrl string `env-required:"true" yaml:"fake_news_queue_url" env:"FAKE_NEWS_QUEUE_URL"`
 	}
 )
 

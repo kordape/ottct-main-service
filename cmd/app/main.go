@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -44,7 +43,7 @@ func main() {
 		panic("configuration error: " + err.Error())
 	}
 
-	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), fmt.Sprintf("%s/000000000000/%s", cfg.AWS.EndpointUrl, cfg.AWS.FakeNewsQueueName))
+	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), cfg.AWS.FakeNewsQueueUrl)
 
 	w := worker.NewWorker(
 		log,
