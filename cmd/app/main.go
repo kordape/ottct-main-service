@@ -11,7 +11,6 @@ import (
 	"github.com/kordape/ottct-main-service/config"
 	"github.com/kordape/ottct-main-service/internal/app"
 	"github.com/kordape/ottct-main-service/internal/sns"
-	"github.com/kordape/ottct-main-service/internal/sqs"
 	"github.com/kordape/ottct-main-service/internal/worker"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
@@ -48,8 +47,7 @@ func main() {
 	w := worker.NewWorker(
 		log,
 		cfg.App.PollerInterval,
-		sqs.ReceiveFakeNewsEventsFnBuilder(sqsClient, log),
-		sqs.DeleteMessageFnBuilder(sqsClient, log),
+		sqsClient,
 		sns.SendNotificationEventFnBuilder(),
 	)
 
