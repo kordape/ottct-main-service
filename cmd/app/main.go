@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/go-playground/validator/v10"
@@ -21,6 +24,8 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
 	"github.com/kordape/ottct-main-service/pkg/token"
+	"github.com/kordape/ottct-poller-service/pkg/predictor"
+	"github.com/kordape/ottct-poller-service/pkg/twitter"
 )
 
 func main() {
@@ -32,21 +37,9 @@ func main() {
 
 	log := logger.New(cfg.Log.Level)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			PartitionID:       "aws",
-			URL:               cfg.AWS.EndpointUrl,
-			SigningRegion:     cfg.AWS.Region,
-			HostnameImmutable: true,
-		}, nil
-	})
-
-	awsCfg, err := awsconfig.LoadDefaultConfig(
-		context.Background(),
-		awsconfig.WithEndpointResolverWithOptions(customResolver),
-	)
+	awsCfg, err := initAWSConfig(cfg.AWS.Region, cfg.AWS.EndpointURL)
 	if err != nil {
-		panic("configuration error: " + err.Error())
+		log.Fatal(err)
 	}
 
 	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), cfg.AWS.FakeNewsQueueUrl)
@@ -92,6 +85,48 @@ func main() {
 	// Run sqs poller worker (as a background process)
 	w.Run(log, subscriptionsManager)
 
+	twitterManager, err := handler.NewTwitterManager(
+		log,
+		validator.New(),
+		twitter.New(
+			&http.Client{
+				Timeout: 5 * time.Second,
+			},
+			cfg.TwitterBearerKey,
+		),
+		predictor.New(
+			&http.Client{
+				Timeout: 5 * time.Second,
+			},
+			cfg.PredictorURL,
+		),
+	)
+
 	// Run app
-	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager)
+	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+}
+
+func initAWSConfig(region, endpoint string) (aws.Config, error) {
+	if len(endpoint) > 0 {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
+			if service == sqsservice.ServiceID || service == sesv2.ServiceID {
+				return aws.Endpoint{
+					URL:           endpoint,
+					SigningRegion: region,
+				}, nil
+			}
+			// Returning EndpointNotFoundError will allow the service to fallback
+			// to it's default resolution.
+			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+		})
+
+		return awsconfig.LoadDefaultConfig(
+			context.Background(),
+			awsconfig.WithEndpointResolverWithOptions(customResolver),
+			awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("id", "fake-secret", "fake-token")),
+			awsconfig.WithRegion(region),
+		)
+	}
+
+	return awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(region))
 }

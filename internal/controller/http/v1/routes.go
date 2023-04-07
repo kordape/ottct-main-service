@@ -14,7 +14,15 @@ type routes struct {
 	db *postgres.DB
 }
 
-func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager *handler.AuthManager, tokenManager *token.Manager, entityManager *handler.EntityManager, subscriptionsManager *handler.SubscriptionManager) {
+func NewRoutes(
+	handler *gin.RouterGroup,
+	l logger.Interface,
+	userManager *handler.AuthManager,
+	tokenManager *token.Manager,
+	entityManager *handler.EntityManager,
+	subscriptionsManager *handler.SubscriptionManager,
+	twitterManager *handler.TwitterManager,
+) {
 	r := &routes{l: l}
 
 	authMiddleware := AuthMiddleware(tokenManager)
@@ -48,5 +56,10 @@ func NewRoutes(handler *gin.RouterGroup, l logger.Interface, userManager *handle
 	{
 		subscriptions.GET("/", r.getSubscriptionsHandler(subscriptionsManager, tokenManager))
 		subscriptions.POST("/:entityid", r.updateSubscriptionsHandler(entityManager, subscriptionsManager, tokenManager))
+	}
+
+	tweets := handler.Group("/tweets", authMiddleware)
+	{
+		tweets.GET("/", r.newGetTweetsHandler(twitterManager))
 	}
 }

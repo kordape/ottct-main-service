@@ -18,10 +18,18 @@ import (
 )
 
 // Run creates objects via constructors.
-func Run(cfg *config.Config, log logger.Interface, userManager *handler.AuthManager, tokenManager *token.Manager, entityManager *handler.EntityManager, subscriptionsManager *handler.SubscriptionManager) {
+func Run(
+	cfg *config.Config,
+	log logger.Interface,
+	userManager *handler.AuthManager,
+	tokenManager *token.Manager,
+	entityManager *handler.EntityManager,
+	subscriptionsManager *handler.SubscriptionManager,
+	twitterManager *handler.TwitterManager,
+) {
 	// HTTP Server
 	handler := gin.New()
-	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager)
+	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

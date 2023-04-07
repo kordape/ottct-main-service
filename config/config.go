@@ -9,12 +9,14 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App       `yaml:"app"`
-		HTTP      `yaml:"http"`
-		Log       `yaml:"logger"`
-		DB        `yaml:"db"`
-		AWS       `yaml:"aws"`
-		SecretKey string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		App              `yaml:"app"`
+		HTTP             `yaml:"http"`
+		Log              `yaml:"logger"`
+		DB               `yaml:"db"`
+		AWS              `yaml:"aws"`
+		SecretKey        string `env-required:"true" yaml:"secret_key" env:"SECRET_KEY"`
+		TwitterBearerKey string `env-required:"true" yaml:"twitter_bearer_key" env:"TWITTER_BEARER_KEY"`
+		PredictorURL     string `env-required:"true" yaml:"predictor_url" env:"PREDICTOR_URL"`
 	}
 
 	// App -.
@@ -39,10 +41,10 @@ type (
 	}
 
 	AWS struct {
-		EndpointUrl      string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
+		EndpointURL      string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
 		Region           string `env-required:"true" yaml:"aws_region" env:"AWS_REGION"`
 		FakeNewsQueueUrl string `env-required:"true" yaml:"fake_news_queue_url" env:"FAKE_NEWS_QUEUE_URL"`
-		VerifiedSender    string `env-required:"true" env:"SENDER"`
+		VerifiedSender   string `env-required:"true" env:"SENDER"`
 	}
 )
 
