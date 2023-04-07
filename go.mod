@@ -4,8 +4,10 @@ go 1.17
 
 require (
 	github.com/Eun/go-hit v0.5.23
+	github.com/aws/aws-sdk-go v1.44.234
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/config v1.18.19
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.20.6
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-gormigrate/gormigrate/v2 v2.0.2

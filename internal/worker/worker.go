@@ -6,30 +6,29 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kordape/ottct-main-service/internal/sns"
+	"github.com/kordape/ottct-main-service/internal/handler"
+	"github.com/kordape/ottct-main-service/internal/ses"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/sqs"
 )
 
 type Worker struct {
-	log                logger.Interface
-	period             time.Duration // seconds
-	quit               chan bool
-	fakeNewsQueue      sqs.Client
-	sendNotificationFn sns.SendNotificationEventFn
+	period        time.Duration // seconds
+	quit          chan bool
+	fakeNewsQueue sqs.Client
+	sendEmailFn   ses.SendFakeNewsEmailFn
 }
 
-func NewWorker(log logger.Interface, period int, fakeNewsQueue sqs.Client, sendNotificationFn sns.SendNotificationEventFn) *Worker {
+func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn ses.SendFakeNewsEmailFn) *Worker {
 	return &Worker{
-		log:           log,
 		period:        time.Duration(period),
 		quit:          make(chan bool),
-		sendNotificationFn: sendNotificationFn,
 		fakeNewsQueue: fakeNewsQueue,
+		sendEmailFn:   sendEmailFn,
 	}
 }
 
-func (w *Worker) Run() {
+func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.SubscriptionManager) {
 	ticker := time.NewTicker(w.period * time.Second)
 
 	go func() {
@@ -39,11 +38,11 @@ func (w *Worker) Run() {
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
 				if err != nil {
-					w.log.Error(fmt.Sprintf("Error receiving message: %s", err))
+					log.Error(fmt.Sprintf("Error receiving message: %s", err))
 					continue
 				}
 				if len(messages) == 0 {
-					w.log.Debug("No new messages available...")
+					log.Debug("No new messages available...")
 					continue
 				}
 
@@ -64,31 +63,44 @@ func (w *Worker) Run() {
 					return events, nil
 				}()
 				if err != nil {
-					w.log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
-					continue
+					log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
 				}
+				eventsLen := len(events)
 
-				w.log.Debug("Received fake news events.")
+				log.Debug(fmt.Sprintf("Received %d fake news event(s).", eventsLen))
 
-				// TODO get all users subscribed to entity
+				for i, e := range events {
+					log.Debug("Started handling message %d out of %d.", i+1, eventsLen)
 
-				for _, e := range events {
-					err = w.sendNotificationFn(ctx, sns.SendNotificationEvent{
-						// TODO populate values
-					})
+					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID)
 					if err != nil {
-						w.log.Error(fmt.Sprintf("Error sending notification: %s", err))
+						log.Error(fmt.Sprintf("Error sending getting subscribed users: %s", err))
 						continue
 					}
-					w.log.Debug("Notifications about the fake news event sent!")
+
+					
+					for _, user := range users {
+						log.Debug(fmt.Sprintf("Attempting to send email to user with id: %d.", user.Id))
+
+						// TODO how should we handle if sending email to one user fails?
+
+						err = w.sendEmailFn(ctx, user, e.EntityID, e.TweetContent)
+						if err != nil {
+							log.Error(fmt.Sprintf("Error sending email to subscribed user with id %d: %s", user.Id, err))
+							continue
+
+						}
+
+						log.Debug(fmt.Sprintf("Email sent to user with id: %d.", user.Id))
+					}
 
 					err = w.fakeNewsQueue.DeleteMessage(ctx, e.ReceiptHandle)
 					if err != nil {
-						w.log.Error(fmt.Sprintf("Error deleting message from queue: %s", err))
+						log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
 						continue
 					}
 
-					w.log.Debug("Message successfully deleted from queue!")
+					log.Debug(fmt.Sprintf("Successfully deleted message %d out of %d from queue.", i+1, eventsLen))
 				}
 
 			case <-w.quit:
@@ -97,10 +109,4 @@ func (w *Worker) Run() {
 			}
 		}
 	}()
-}
-
-func (w *Worker) sendNotification(context.Context, sns.SendNotificationEvent) error {
-	// TODO: implement
-	// send email to subscribed user
-	return nil
 }
