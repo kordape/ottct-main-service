@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/go-playground/validator/v10"
@@ -36,21 +37,9 @@ func main() {
 
 	log := logger.New(cfg.Log.Level)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			PartitionID:       "aws",
-			URL:               cfg.AWS.EndpointUrl,
-			SigningRegion:     cfg.AWS.Region,
-			HostnameImmutable: true,
-		}, nil
-	})
-
-	awsCfg, err := awsconfig.LoadDefaultConfig(
-		context.Background(),
-		awsconfig.WithEndpointResolverWithOptions(customResolver),
-	)
+	awsCfg, err := initAWSConfig(cfg.AWS.Region, cfg.AWS.EndpointURL)
 	if err != nil {
-		panic("configuration error: " + err.Error())
+		log.Fatal(err)
 	}
 
 	sqsClient := sqspkg.NewClient(sqsservice.NewFromConfig(awsCfg), cfg.AWS.FakeNewsQueueUrl)
@@ -115,4 +104,29 @@ func main() {
 
 	// Run app
 	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+}
+
+func initAWSConfig(region, endpoint string) (aws.Config, error) {
+	if len(endpoint) > 0 {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
+			if service == sqsservice.ServiceID || service == sesv2.ServiceID {
+				return aws.Endpoint{
+					URL:           endpoint,
+					SigningRegion: region,
+				}, nil
+			}
+			// Returning EndpointNotFoundError will allow the service to fallback
+			// to it's default resolution.
+			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+		})
+
+		return awsconfig.LoadDefaultConfig(
+			context.Background(),
+			awsconfig.WithEndpointResolverWithOptions(customResolver),
+			awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("id", "fake-secret", "fake-token")),
+			awsconfig.WithRegion(region),
+		)
+	}
+
+	return awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(region))
 }
