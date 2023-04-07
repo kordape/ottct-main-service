@@ -1,6 +1,7 @@
 app:
   name: 'main-service'
   version: '1.0.0'
+  poller_interval: 10
 
 http:
   port: '8080'

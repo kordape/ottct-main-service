@@ -12,7 +12,8 @@ type User struct {
 
 // Entity model definition
 type Entity struct {
-	ID          string `gorm:"primaryKey"`
-	TwitterId   string `gorm:"uniqueIndex;not null"`
-	DisplayName string `gorm:"not null"`
+	ID            string `gorm:"primaryKey"`
+	TwitterId     string `gorm:"uniqueIndex;not null"`
+	DisplayName   string `gorm:"not null"`
+	Subscriptions []User `gorm:"many2many:subscriptions;"`
 }
