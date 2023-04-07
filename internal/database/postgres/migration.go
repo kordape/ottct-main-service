@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/go-gormigrate/gormigrate/v2"
-	model "github.com/kordape/ottct-main-service/pkg/db"
 	"gorm.io/gorm"
+
+	model "github.com/kordape/ottct-main-service/pkg/db"
 )
 
 var (

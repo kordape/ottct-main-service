@@ -4,8 +4,9 @@ networks:
     driver: bridge
 services:
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack:latest
     container_name: localstack
+    hostname: localstack
     healthcheck:
       test:
         - CMD
@@ -18,9 +19,14 @@ services:
     ports:
       - 4566:4566
     environment:
-      - SERVICES=sqs
+      SERVICES: "sqs,ses"
+      DOCKER_HOST: 'unix:///var/run/docker.sock'
+      AWS_REGION: 'us-east-1'
+      HOSTNAME_EXTERNAL: 'localstack'
     volumes:
-      - "./init-scripts:/docker-entrypoint-initaws.d"
+      - "./init-scripts://etc/localstack/init/ready.d/"
+      - "./.localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - ottct-main-network
   app:
@@ -32,6 +38,13 @@ services:
       SECRET_KEY: 's+76qrrI53tqP666lQla3t+pitXrAsYQQbEn/55JQKA='
       TWITTER_BEARER_KEY: 'AAAAAAAAAAAAAAAAAAAAACXAcgEAAAAAMFkd4RQMKRSjvXUQGIrdZAHNJjg%3DLYqfisQPqvbuXeo0FjwYhrGqJ0eU6MVdHsLIqdvJ368MfZAq9o'
       PREDICTOR_URL: 'http://ml-main:8080/predict'
+      SENDER: 'admin@admin.com'
+      AWS_ENDPOINT_URL: 'http://localstack:4566'
+      FAKE_NEWS_QUEUE_URL: 'http://localstack:4566/000000000000/default-fake-news'
+      AWS_REGION: 'us-east-1'
+      AWS_PROFILE: 'user'
+      AWS_ACCESS_KEY_ID: 'foobar'
+      AWS_SECRET_ACCESS_KEY: 'foobar'
     ports:
       - 8080:8080
     networks:

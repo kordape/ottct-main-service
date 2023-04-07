@@ -3,82 +3,33 @@ package app
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	pg "gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"github.com/kordape/ottct-main-service/config"
-	httplayer "github.com/kordape/ottct-main-service/internal/controller/http"
-	"github.com/kordape/ottct-main-service/internal/database/postgres"
+	"github.com/kordape/ottct-main-service/internal/controller/http"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
-	"github.com/kordape/ottct-poller-service/pkg/predictor"
-	"github.com/kordape/ottct-poller-service/pkg/twitter"
 )
 
 // Run creates objects via constructors.
-func Run(cfg *config.Config) {
-	log := logger.New(cfg.Log.Level)
-
-	dbClient, err := gorm.Open(pg.Open(cfg.DB.URL), &gorm.Config{})
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db, err := postgres.New(dbClient, log)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = db.Migrate()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tokenManager, err := token.NewManager(cfg.SecretKey, "ottct")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	userManager, err := handler.NewAuthManager(db, log, validator.New(), tokenManager)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	entityManager := handler.NewEntityManager(db, log)
-
-	subscriptionsManager := handler.NewSubscriptionManager(db, log)
-
-	twitterManager, err := handler.NewTwitterManager(
-		log,
-		validator.New(),
-		twitter.New(
-			&http.Client{
-				Timeout: 10 * time.Second,
-			},
-			cfg.TwitterBearerKey,
-		),
-		predictor.New(
-			&http.Client{
-				Timeout: 10 * time.Second,
-			},
-			cfg.PredictorURL,
-		),
-	)
-
+func Run(
+	cfg *config.Config,
+	log logger.Interface,
+	userManager *handler.AuthManager,
+	tokenManager *token.Manager,
+	entityManager *handler.EntityManager,
+	subscriptionsManager *handler.SubscriptionManager,
+	twitterManager *handler.TwitterManager,
+) {
 	// HTTP Server
 	handler := gin.New()
-	httplayer.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
