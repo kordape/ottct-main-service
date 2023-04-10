@@ -6,19 +6,17 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/kordape/ottct-main-service/pkg/api"
-	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionManager struct {
 	storage          SubscriptionStorage
-	log              logger.Interface
 	requestValidator *validator.Validate
 }
 
-func NewSubscriptionManager(storage SubscriptionStorage, log logger.Interface, validate *validator.Validate) (*SubscriptionManager, error) {
+func NewSubscriptionManager(storage SubscriptionStorage, validate *validator.Validate) (*SubscriptionManager, error) {
 	m := &SubscriptionManager{
 		storage:          storage,
-		log:              log,
 		requestValidator: validate,
 	}
 
@@ -49,37 +47,37 @@ type SubscriptionStorage interface {
 	DeleteSubscription(userId uint, entityId string) error
 }
 
-func (m SubscriptionManager) GetSubscriptionsByUser(userId uint) (entities []Entity, err error) {
+func (m SubscriptionManager) GetSubscriptionsByUser(userId uint, log *logrus.Entry) (entities []Entity, err error) {
 	entities, err = m.storage.GetSubscriptionsByUser(userId)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get user's subscriptions: %w", err))
+		log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get user's subscriptions: %w", err))
 		return nil, fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
 	}
 
 	return
 }
 
-func (m SubscriptionManager) GetSubscriptionsByEntity(entityId string) (users []User, err error) {
+func (m SubscriptionManager) GetSubscriptionsByEntity(entityId string, log *logrus.Entry) (users []User, err error) {
 	users, err = m.storage.GetSubscriptionsByEntity(entityId)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get subscriptions by entity: %w", err))
+		log.Error(fmt.Errorf("[SubscriptionsManager] Failed to get subscriptions by entity: %w", err))
 		return nil, fmt.Errorf("[SubscriptionsManager] Subscription storage error: %w", err)
 	}
 
 	return
 }
 
-func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, request api.UpdateSubscriptionRequest) error {
+func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, request api.UpdateSubscriptionRequest, log *logrus.Entry) error {
 	err := m.requestValidator.Struct(request)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionManager] Error validating request: %w", err))
+		log.Error(fmt.Errorf("[SubscriptionManager] Error validating request: %w", err))
 		return ErrInvalidRequest
 	}
 
 	if request.Subscribe {
 		err := m.storage.AddSubscription(userId, entityId)
 		if err != nil {
-			m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
+			log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
 			return fmt.Errorf("subscription storage error: %w", err)
 		}
 
@@ -88,7 +86,7 @@ func (m SubscriptionManager) UpdateSubscription(userId uint, entityId string, re
 
 	err = m.storage.DeleteSubscription(userId, entityId)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
+		log.Error(fmt.Errorf("[SubscriptionsManager] Failed to update subscription: %w", err))
 		return fmt.Errorf("subscription storage error: %w", err)
 	}
 

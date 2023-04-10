@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 	pg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -21,7 +21,6 @@ import (
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/internal/ses"
 	"github.com/kordape/ottct-main-service/internal/worker"
-	"github.com/kordape/ottct-main-service/pkg/logger"
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
 	"github.com/kordape/ottct-main-service/pkg/token"
 	"github.com/kordape/ottct-poller-service/pkg/predictor"
@@ -29,13 +28,27 @@ import (
 )
 
 func main() {
+
+	log := logrus.StandardLogger()
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(
+		&logrus.TextFormatter{
+			ForceColors: true,
+		},
+	)
+
 	// Configuration
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	log := logger.New(cfg.Log.Level)
+	level, err := logrus.ParseLevel(cfg.Log.Level)
+	if err != nil {
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(level)
+	}
 
 	awsCfg, err := initAWSConfig(cfg.AWS.Region, cfg.AWS.EndpointURL)
 	if err != nil {
@@ -49,7 +62,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := postgres.New(dbClient, log)
+	db, err := postgres.New(dbClient, logrus.NewEntry(log))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,14 +77,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userManager, err := handler.NewAuthManager(db, log, validator.New(), tokenManager)
+	userManager, err := handler.NewAuthManager(db, validator.New(), tokenManager)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	entityManager := handler.NewEntityManager(db, log)
+	entityManager := handler.NewEntityManager(db)
 
-	subscriptionsManager, err := handler.NewSubscriptionManager(db, log, validator.New())
+	subscriptionsManager, err := handler.NewSubscriptionManager(db, validator.New())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,10 +96,9 @@ func main() {
 	)
 
 	// Run sqs poller worker (as a background process)
-	w.Run(log, subscriptionsManager)
+	w.Run(logrus.NewEntry(log), subscriptionsManager)
 
 	twitterManager, err := handler.NewTwitterManager(
-		log,
 		validator.New(),
 		twitter.New(
 			&http.Client{
@@ -103,7 +115,7 @@ func main() {
 	)
 
 	// Run app
-	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+	app.Run(cfg, logrus.NewEntry(log), userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 }
 
 func initAWSConfig(region, endpoint string) (aws.Config, error) {

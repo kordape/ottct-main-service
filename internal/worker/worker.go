@@ -8,8 +8,8 @@ import (
 
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/internal/ses"
-	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/sqs"
+	"github.com/sirupsen/logrus"
 )
 
 type Worker struct {
@@ -28,21 +28,21 @@ func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn ses.SendFakeNew
 	}
 }
 
-func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.SubscriptionManager) {
+func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.SubscriptionManager) {
 	ticker := time.NewTicker(w.period * time.Second)
 
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
+				log.Debug("Worker tick")
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
 				if err != nil {
-					log.Error(fmt.Sprintf("Error receiving message: %s", err))
+					log.WithError(err).Error("Error receiving message")
 					continue
 				}
 				if len(messages) == 0 {
-					log.Debug("No new messages available...")
 					continue
 				}
 
@@ -63,44 +63,45 @@ func (w *Worker) Run(log logger.Interface, subscriptionsManager *handler.Subscri
 					return events, nil
 				}()
 				if err != nil {
-					log.Error(fmt.Sprintf("Error unmarshalling messages into proper structs: %s", err))
+					log.WithError(err).Error("Error unmarshalling messages into proper structs")
 				}
 				eventsLen := len(events)
 
-				log.Debug(fmt.Sprintf("Received %d fake news event(s).", eventsLen))
+				log = log.WithField("events_len", eventsLen)
+				log.Debug("Received fake news event(s)")
 
 				for i, e := range events {
-					log.Debug("Started handling message %d out of %d.", i+1, eventsLen)
+					log.WithField("index", i+1).Debug("Started handling message")
 
-					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID)
+					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID, log)
 					if err != nil {
-						log.Error(fmt.Sprintf("Error sending getting subscribed users: %s", err))
+						log.WithError(err).Error("Error sending getting subscribed users")
 						continue
 					}
 
-					
 					for _, user := range users {
-						log.Debug(fmt.Sprintf("Attempting to send email to user with id: %d.", user.Id))
+						log = log.WithField("user", user.Id)
+						log.Debug("Attempting to send email to user")
 
 						// TODO how should we handle if sending email to one user fails?
 
 						err = w.sendEmailFn(ctx, user, e.EntityID, e.TweetContent)
 						if err != nil {
-							log.Error(fmt.Sprintf("Error sending email to subscribed user with id %d: %s", user.Id, err))
+							log.WithError(err).Error("Error sending email to subscribed user")
 							continue
 
 						}
 
-						log.Debug(fmt.Sprintf("Email sent to user with id: %d.", user.Id))
+						log.Debug("Email sent to user")
 					}
 
 					err = w.fakeNewsQueue.DeleteMessage(ctx, e.ReceiptHandle)
 					if err != nil {
-						log.Error(fmt.Sprintf("error deleting message from queue: %s", err))
+						log.WithError(err).Error("error deleting message from queue")
 						continue
 					}
 
-					log.Debug(fmt.Sprintf("Successfully deleted message %d out of %d from queue.", i+1, eventsLen))
+					log.Debug("Successfully deleted message")
 				}
 
 			case <-w.quit:

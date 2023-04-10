@@ -4,17 +4,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/sirupsen/logrus"
 
 	"gorm.io/gorm"
 )
 
 type DB struct {
 	db  *gorm.DB
-	log *logger.Logger
+	log *logrus.Entry
 }
 
-func New(db *gorm.DB, log *logger.Logger) (*DB, error) {
+func New(db *gorm.DB, log *logrus.Entry) (*DB, error) {
 	d := &DB{
 		db:  db,
 		log: log,

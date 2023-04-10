@@ -2,7 +2,6 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,7 +13,8 @@ import (
 
 func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		r.l.Debug("GetTweets request received")
+		logger := getLogger(c)
+		logger.Debug("GetTweets request received")
 
 		request := api.GetTweetsRequest{
 			EntityID:   c.Query("entityId"),
@@ -23,18 +23,18 @@ func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gi
 			MaxResults: toIntOrZero(c.Query("maxResults")),
 		}
 
-		resp, err := manager.GetTweets(c.Request.Context(), request)
+		resp, err := manager.GetTweets(c.Request.Context(), request, logger)
 
 		if err != nil {
 			if errors.Is(err, handler.ErrInvalidRequest) {
-				r.l.Error(fmt.Errorf("Invalid GetTweets request: %v", err))
+				logger.WithError(err).Error("Invalid GetTweets request")
 				c.AbortWithStatusJSON(http.StatusBadRequest, api.GetTweetsResponse{
 					Error: err.Error(),
 				})
 				return
 			}
 
-			r.l.Error(fmt.Errorf("GetTweets internal error: %v", err.Error()))
+			logger.WithError(err).Error("GetTweets internal error")
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 			return
 		}

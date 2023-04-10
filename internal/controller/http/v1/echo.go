@@ -8,7 +8,8 @@ import (
 )
 
 func (r *routes) echoHandler(c *gin.Context) {
-	r.l.Debug("Echo request received")
+	logger := getLogger(c)
+	logger.Debug("Echo request received")
 	c.JSON(http.StatusOK, api.EchoResponse{
 		Message: "Echo Response",
 	})

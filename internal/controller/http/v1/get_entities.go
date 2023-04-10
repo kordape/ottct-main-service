@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,11 +10,12 @@ import (
 
 func (r *routes) getEntitiesHandler(entityManager *handler.EntityManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		r.l.Debug("Get entities request received")
+		logger := getLogger(c)
+		logger.Debug("Get entities request received")
 
-		entities, err := entityManager.GetEntities()
+		entities, err := entityManager.GetEntities(logger)
 		if err != nil {
-			r.l.Error(fmt.Errorf("GetEntities internal error: %w", err))
+			logger.WithError(err).Error("GetEntities internal error")
 			c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 			return
 		}

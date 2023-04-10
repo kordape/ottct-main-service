@@ -2,30 +2,32 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/kordape/ottct-main-service/internal/database/postgres"
 	"github.com/kordape/ottct-main-service/internal/handler"
-	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
 type routes struct {
-	l  logger.Interface
 	db *postgres.DB
 }
 
 func NewRoutes(
 	handler *gin.RouterGroup,
-	l logger.Interface,
+	l *logrus.Entry,
 	userManager *handler.AuthManager,
 	tokenManager *token.Manager,
 	entityManager *handler.EntityManager,
 	subscriptionsManager *handler.SubscriptionManager,
 	twitterManager *handler.TwitterManager,
 ) {
-	r := &routes{l: l}
+	r := &routes{}
 
 	authMiddleware := AuthMiddleware(tokenManager)
+	loggingMiddleware := Logging(l)
+
+	handler.Use(loggingMiddleware)
 
 	echo := handler.Group("/echo")
 	{

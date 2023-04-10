@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -15,16 +14,17 @@ import (
 
 func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager, subscriptionsManager *handler.SubscriptionManager, tokenManager *token.Manager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		r.l.Debug("Update subscriptions request received")
+		logger := getLogger(c)
+		logger.Debug("Update subscriptions request received")
 
-		entity, err := entityManager.GetEntity(c.Param("entityid"))
+		entity, err := entityManager.GetEntity(c.Param("entityid"), logger)
 		if err != nil {
-			r.l.Error(fmt.Errorf("error while getting entity: %s", err))
+			logger.WithError(err).Error("error while getting entity")
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 		if entity == nil {
-			r.l.Info("Entity not found")
+			logger.Error("Entity not found")
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
@@ -32,34 +32,34 @@ func (r *routes) updateSubscriptionsHandler(entityManager *handler.EntityManager
 		var request api.UpdateSubscriptionRequest
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			r.l.Error(fmt.Errorf("error while reading request body: %s", err))
+			logger.WithError(err).Error("error while reading request body")
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		err = json.Unmarshal(requestBody, &request)
 		if err != nil {
-			r.l.Error(fmt.Errorf("error while unmarshaling UpdateSubscription request: %v", err))
+			logger.WithError(err).Error("error while unmarshaling UpdateSubscription request")
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 
 		claims, err := tokenManager.GetClaimsFromJWT(c.GetHeader("Authorization"))
 		if err != nil {
-			r.l.Error(fmt.Errorf("error getting claims from bearer token: %w", err))
+			logger.WithError(err).Error("error getting claims from bearer token")
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
-		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request)
+		err = subscriptionsManager.UpdateSubscription(claims.User, entity.Id, request, logger)
 		if err != nil {
 			if errors.Is(err, handler.ErrInvalidRequest) {
-				r.l.Error(fmt.Errorf("error while updating subscription: %s", err))
+				logger.WithError(err).Error("error while updating subscription")
 				c.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
-			
-			r.l.Error(fmt.Errorf("error while updating subscription: %s", err))
+
+			logger.WithError(err).Error("error while updating subscription")
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
