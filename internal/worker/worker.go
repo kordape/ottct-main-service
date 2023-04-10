@@ -29,14 +29,12 @@ func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn ses.SendFakeNew
 }
 
 func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.SubscriptionManager) {
-	fmt.Println("RUNNING WORKER")
 	ticker := time.NewTicker(w.period * time.Second)
 
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("TICKKK!!")
 				log.Debug("Worker tick")
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
