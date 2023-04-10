@@ -70,11 +70,10 @@ func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.Subscripti
 				log.WithField("events_len", eventsLen).Debug("Received fake news event(s)")
 
 				for i, e := range events {
-					log = log.WithFields(logrus.Fields{
+					log.WithFields(logrus.Fields{
 						"index": i,
 						"event": e,
-					})
-					log.Debug("Started handling message")
+					}).Debug("Started handling message")
 
 					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID, log)
 					if err != nil {
@@ -83,8 +82,7 @@ func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.Subscripti
 					}
 
 					for _, user := range users {
-						log = log.WithField("user", user.Id)
-						log.Debug("Attempting to send email to user")
+						log.WithField("user", user.Id).Debug("Attempting to send email to user")
 
 						// TODO how should we handle if sending email to one user fails?
 

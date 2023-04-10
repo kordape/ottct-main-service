@@ -100,9 +100,6 @@ func main() {
 		),
 	)
 
-	// Run app
-	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
-
 	w := worker.NewWorker(
 		cfg.App.PollerInterval,
 		sqsClient,
@@ -111,6 +108,9 @@ func main() {
 
 	// Run sqs poller worker (as a background process)
 	w.Run(log.WithField("domain", "worker"), subscriptionsManager)
+
+	// Run app
+	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 
 }
 
