@@ -80,3 +80,12 @@ services:
         docker-entrypoint.sh postgres
     networks:
       - ottct-main-network
+  swagger-ui:
+   image: swaggerapi/swagger-ui
+   container_name: swagger_ui_container
+   ports:
+      - "8082:8080"
+   volumes:
+      - "./docs/api.yaml:/api.yaml"
+   environment:
+      SWAGGER_JSON: '/api.yaml'

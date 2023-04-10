@@ -20,7 +20,6 @@ type User struct {
 	Id       uint
 	Email    string
 	Password string
-	Phone    string
 }
 
 type UserStorage interface {
@@ -85,7 +84,6 @@ func (m AuthManager) SignUp(request api.SignUpRequest) error {
 	err = m.storage.CreateUser(User{
 		Email:    request.Email,
 		Password: request.Password,
-		Phone:    request.Phone,
 	})
 
 	if err != nil {
