@@ -12,7 +12,6 @@ import (
 func (r *routes) getSubscriptionsHandler(subscriptionsManager *handler.SubscriptionManager, tokenManager *token.Manager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := getLogger(c)
-		logger.Debug("Get subscriptions by user request received")
 		claims, err := tokenManager.GetClaimsFromJWT(c.GetHeader("Authorization"))
 		if err != nil {
 			logger.WithError(err).Error("Error getting claims from bearer token")

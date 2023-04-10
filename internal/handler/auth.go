@@ -75,7 +75,7 @@ func (m AuthManager) SignUp(request api.SignUpRequest, log *logrus.Entry) error 
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
-		log.Error(fmt.Errorf("[AuthManager] Invalid SignUp request: %w", err))
+		log.WithError(err).Error("[AuthManager] Invalid SignUp request")
 		return ErrInvalidRequest
 	}
 
@@ -85,7 +85,7 @@ func (m AuthManager) SignUp(request api.SignUpRequest, log *logrus.Entry) error 
 	})
 
 	if err != nil {
-		log.Error(fmt.Errorf("[AuthManager] Failed to create user: %w", err))
+		log.WithError(err).Error("[AuthManager] Failed to create user")
 		return fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
@@ -101,20 +101,20 @@ func (m AuthManager) Auth(request api.AuthRequest, log *logrus.Entry) (string, e
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
-		log.Error(fmt.Errorf("[AuthManager] Invalid Auth request: %w", err))
+		log.WithError(err).Error("[AuthManager] Invalid Auth request")
 		return "", ErrInvalidRequest
 	}
 
 	user, err := m.storage.GetUserByCredentials(request.Email, request.Password)
 
 	if err != nil {
-		log.Error(fmt.Errorf("[AuthManager] Failed to get user: %w", err))
+		log.WithError(err).Error("[AuthManager] Failed to get user")
 		return "", fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
 	token, err := m.tokenManager.GenerateJWT(user.Id)
 	if err != nil {
-		log.Error(fmt.Errorf("[AuthManager] Failed to generate token for user: %w", err))
+		log.WithError(err).Error("[AuthManager] Failed to generate token for user")
 		return "", fmt.Errorf("[AuthManager] token manager error: %w", err)
 	}
 

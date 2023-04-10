@@ -24,6 +24,7 @@ type (
 		Name           string `env-required:"true" yaml:"name" env:"APP_NAME"`
 		Version        string `env-required:"true" yaml:"version" env:"APP_VERSION"`
 		PollerInterval int    `env-required:"true" yaml:"poller_interval" env:"POLLER_INTERVAL"`
+		JWTIssuer      string `env-required:"true" yaml:"jwt_issuer" env:"JWT_ISSUER"`
 	}
 
 	// HTTP -.

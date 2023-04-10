@@ -14,7 +14,6 @@ import (
 func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := getLogger(c)
-		logger.Debug("SignUp request received")
 
 		request := api.SignUpRequest{}
 		requestBody, _ := ioutil.ReadAll(c.Request.Body)
@@ -53,7 +52,6 @@ func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.
 func (r *routes) newAuthHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := getLogger(c)
-		logger.Debug("Auth request received")
 
 		request := api.AuthRequest{}
 		requestBody, _ := ioutil.ReadAll(c.Request.Body)

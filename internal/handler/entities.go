@@ -30,7 +30,7 @@ func NewEntityManager(entityStorage EntityStorage) *EntityManager {
 func (m EntityManager) GetEntity(id string, log *logrus.Entry) (entity *Entity, err error) {
 	entity, err = m.storage.GetEntity(id)
 	if err != nil {
-		log.Error(fmt.Errorf("[EntityManager] Failed to get entity by id: %w", err))
+		log.WithError(err).Error("[EntityManager] Failed to get entity by id")
 		return nil, fmt.Errorf("[EntityManager] storage error: %w", err)
 	}
 
@@ -40,7 +40,7 @@ func (m EntityManager) GetEntity(id string, log *logrus.Entry) (entity *Entity, 
 func (m EntityManager) GetEntities(log *logrus.Entry) (entities []Entity, err error) {
 	entities, err = m.storage.GetEntities()
 	if err != nil {
-		log.Error(fmt.Errorf("[EntityManager] Failed to get entities: %w", err))
+		log.WithError(err).Error("[EntityManager] Failed to get entities")
 		return nil, fmt.Errorf("[EntityManager] storage error: %w", err)
 	}
 

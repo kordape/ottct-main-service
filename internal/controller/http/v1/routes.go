@@ -24,10 +24,9 @@ func NewRoutes(
 ) {
 	r := &routes{}
 
-	authMiddleware := AuthMiddleware(tokenManager)
-	loggingMiddleware := Logging(l)
-
-	handler.Use(loggingMiddleware)
+	log := l.WithField("domain", "api-v1")
+	handler.Use(Logging(log))
+	authMiddleware := AuthMiddleware(tokenManager, log)
 
 	echo := handler.Group("/echo")
 	{

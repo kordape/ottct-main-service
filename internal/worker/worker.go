@@ -29,12 +29,14 @@ func NewWorker(period int, fakeNewsQueue sqs.Client, sendEmailFn ses.SendFakeNew
 }
 
 func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.SubscriptionManager) {
+	fmt.Println("RUNNING WORKER")
 	ticker := time.NewTicker(w.period * time.Second)
 
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
+				fmt.Println("TICKKK!!")
 				log.Debug("Worker tick")
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
@@ -67,15 +69,18 @@ func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.Subscripti
 				}
 				eventsLen := len(events)
 
-				log = log.WithField("events_len", eventsLen)
-				log.Debug("Received fake news event(s)")
+				log.WithField("events_len", eventsLen).Debug("Received fake news event(s)")
 
 				for i, e := range events {
-					log.WithField("index", i+1).Debug("Started handling message")
+					log = log.WithFields(logrus.Fields{
+						"index": i,
+						"event": e,
+					})
+					log.Debug("Started handling message")
 
 					users, err := subscriptionsManager.GetSubscriptionsByEntity(e.EntityID, log)
 					if err != nil {
-						log.WithError(err).Error("Error sending getting subscribed users")
+						log.WithError(err).Error("Error getting subscribed users")
 						continue
 					}
 

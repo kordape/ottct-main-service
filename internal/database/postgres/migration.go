@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-gormigrate/gormigrate/v2"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	model "github.com/kordape/ottct-main-service/pkg/db"
@@ -15,7 +16,7 @@ var (
 	seed202303282200 string
 )
 
-func (db *DB) Migrate() error {
+func (db *DB) Migrate(log *logrus.Entry) error {
 	m := gormigrate.New(db.db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
 			ID: "202303140000",
@@ -44,11 +45,11 @@ func (db *DB) Migrate() error {
 	})
 
 	if err := m.Migrate(); err != nil {
-		db.log.Error(fmt.Errorf("Could not migrate: %v", err))
+		log.Error(fmt.Errorf("Could not migrate: %v", err))
 		return fmt.Errorf("Migration failed: %v", err)
 	}
 
-	db.log.Info("Migration run successfully")
+	log.Info("Migration run successfully")
 
 	return nil
 }

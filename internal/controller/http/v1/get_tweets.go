@@ -14,7 +14,6 @@ import (
 func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := getLogger(c)
-		logger.Debug("GetTweets request received")
 
 		request := api.GetTweetsRequest{
 			EntityID:   c.Query("entityId"),

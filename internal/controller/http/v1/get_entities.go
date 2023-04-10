@@ -11,7 +11,6 @@ import (
 func (r *routes) getEntitiesHandler(entityManager *handler.EntityManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := getLogger(c)
-		logger.Debug("Get entities request received")
 
 		entities, err := entityManager.GetEntities(logger)
 		if err != nil {

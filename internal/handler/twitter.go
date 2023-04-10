@@ -67,7 +67,7 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
-		log.Error(fmt.Errorf("[TwitterManager] Invalid GetTweetsRequest request: %w", err))
+		log.WithError(err).Error("[TwitterManager] Invalid GetTweetsRequest request")
 		return api.GetTweetsResponse{}, ErrInvalidRequest
 	}
 

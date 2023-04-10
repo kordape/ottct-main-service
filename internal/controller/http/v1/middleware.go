@@ -3,7 +3,6 @@ package v1
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/pkg/token"
@@ -14,12 +13,13 @@ const authHeaderKey = "Authorization"
 
 const ctxLoggerKey = "logger"
 
-func AuthMiddleware(tokenManager *token.Manager) gin.HandlerFunc {
+func AuthMiddleware(tokenManager *token.Manager, log *logrus.Entry) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearerToken := c.GetHeader(authHeaderKey)
 		token := strings.Split(bearerToken, "Bearer ")
 
 		if err := tokenManager.VerifyJWT(token[1]); err != nil {
+			log.WithError(err).Warn("Failed to verify token")
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
@@ -36,8 +36,20 @@ func Logging(logger *logrus.Entry) gin.HandlerFunc {
 			"path":   c.Request.URL.Path,
 			"method": c.Request.Method,
 		})
+		logger.Debug("Request received")
 		// Save logger to context
 		c.Set(ctxLoggerKey, logger)
+
+		// run next middleware in chain
+		c.Next()
+
+		// log response code
+		responseCode := c.Writer.Status()
+		if responseCode != http.StatusOK {
+			logger.WithField("code", responseCode).Error("Request failed")
+		} else {
+			logger.Debug("Request successful")
+		}
 	}
 }
 
@@ -59,11 +71,12 @@ func getLogger(c *gin.Context) *logrus.Entry {
 
 func defaultLogger() *logrus.Entry {
 	log := logrus.StandardLogger()
-	log.SetFormatter(
-		&logrus.JSONFormatter{
-			TimestampFormat: time.RFC3339,
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(
+		&logrus.TextFormatter{
+			ForceColors: true,
 		},
 	)
 
-	return logrus.NewEntry(log).WithField("foo", "bar")
+	return logrus.NewEntry(log)
 }

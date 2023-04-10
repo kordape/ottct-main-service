@@ -29,7 +29,7 @@ import (
 
 func main() {
 
-	log := logrus.StandardLogger()
+	logger := logrus.StandardLogger()
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(
 		&logrus.TextFormatter{
@@ -40,15 +40,10 @@ func main() {
 	// Configuration
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Config error: %s", err)
+		logger.Fatalf("Config error: %s", err)
 	}
 
-	level, err := logrus.ParseLevel(cfg.Log.Level)
-	if err != nil {
-		logrus.SetLevel(logrus.DebugLevel)
-	} else {
-		logrus.SetLevel(level)
-	}
+	log := setupLogger(logger, cfg)
 
 	awsCfg, err := initAWSConfig(cfg.AWS.Region, cfg.AWS.EndpointURL)
 	if err != nil {
@@ -62,17 +57,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := postgres.New(dbClient, logrus.NewEntry(log))
+	db, err := postgres.New(dbClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = db.Migrate()
+	err = db.Migrate(log)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tokenManager, err := token.NewManager(cfg.SecretKey, "ottct")
+	tokenManager, err := token.NewManager(cfg.SecretKey, cfg.App.JWTIssuer)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,15 +83,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	w := worker.NewWorker(
-		cfg.App.PollerInterval,
-		sqsClient,
-		ses.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
-	)
-
-	// Run sqs poller worker (as a background process)
-	w.Run(logrus.NewEntry(log), subscriptionsManager)
 
 	twitterManager, err := handler.NewTwitterManager(
 		validator.New(),
@@ -115,7 +101,34 @@ func main() {
 	)
 
 	// Run app
-	app.Run(cfg, logrus.NewEntry(log), userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+
+	w := worker.NewWorker(
+		cfg.App.PollerInterval,
+		sqsClient,
+		ses.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
+	)
+
+	// Run sqs poller worker (as a background process)
+	w.Run(log.WithField("domain", "worker"), subscriptionsManager)
+
+}
+
+func setupLogger(logger *logrus.Logger, cfg *config.Config) *logrus.Entry {
+	level, err := logrus.ParseLevel(cfg.Log.Level)
+	if err != nil {
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(level)
+	}
+
+	log := logrus.NewEntry(logger)
+	log = log.WithFields(logrus.Fields{
+		"service": cfg.App.Name,
+		"version": cfg.App.Version,
+	})
+
+	return log
 }
 
 func initAWSConfig(region, endpoint string) (aws.Config, error) {
