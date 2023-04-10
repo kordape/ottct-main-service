@@ -13,7 +13,6 @@ func (db *DB) CreateUser(user handler.User) error {
 	u := model.User{
 		Email:    user.Email,
 		Password: user.Password,
-		Phone:    user.Phone,
 	}
 
 	err := db.db.Create(&u).Error
@@ -34,6 +33,5 @@ func (db *DB) GetUserByCredentials(email string, password string) (handler.User,
 		Id:       u.ID,
 		Email:    u.Email,
 		Password: u.Password,
-		Phone:    u.Phone,
 	}, err
 }

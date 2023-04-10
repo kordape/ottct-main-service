@@ -1,5 +1,5 @@
-INSERT INTO public.users(email, password, phone) VALUES
-('admin@admin.com','admin', '00381643025582');
+INSERT INTO public.users(email, password, created_at) VALUES
+('admin@admin.com','admin','2023-04-07 00:00:00.000000+00');
 
 INSERT INTO public.entities(id, twitter_id, display_name) VALUES
 ('1','357312062','BTC'),
