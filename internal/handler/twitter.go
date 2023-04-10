@@ -58,6 +58,18 @@ func (m TwitterManager) validate() error {
 	return nil
 }
 
+type Classification int
+
+const (
+	Real Classification = 1
+	Fake Classification = 0
+)
+
+type tweet struct {
+	Content string
+	Score   Classification
+}
+
 func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsRequest, log *logrus.Entry) (api.GetTweetsResponse, error) {
 	err := m.validate()
 
@@ -115,18 +127,43 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 		return api.GetTweetsResponse{}, fmt.Errorf("error in mismatched number of classifications: %w", err)
 	}
 
-	tweets := make([]api.Tweet, len(resp))
+	tweets := toDomainTweets(resp, classifyResp.Classification)
 
-	for i, t := range resp {
-		tweets[i] = api.Tweet{
-			ID:            t.ID,
-			Content:       t.Text,
-			CreatedAt:     t.CreatedAt,
-			RealnessScore: float32(classifyResp.Classification[i]),
+	return api.GetTweetsResponse{
+		Result: getAnalytics(tweets),
+	}, nil
+}
+
+func toDomainTweets(tweets twitter.FetchTweetsResponse, classifications []predictor.Classification) []tweet {
+	dts := make([]tweet, len(tweets))
+
+	for i, t := range tweets {
+		dts[i] = tweet{
+			Content: t.Text,
+			Score:   Classification(classifications[i]),
 		}
 	}
 
-	return api.GetTweetsResponse{
-		Tweets: tweets,
-	}, nil
+	return dts
+}
+
+func getAnalytics(tweets []tweet) api.Analytics {
+	a := api.Analytics{
+		Total: len(tweets),
+	}
+
+	var authentic int
+	var unauthentic int
+	for _, t := range tweets {
+		if t.Score == Real {
+			authentic++
+		} else {
+			unauthentic++
+		}
+	}
+
+	a.Authentic = (float32(authentic) / float32(a.Total)) * 100
+	a.Unauthentic = (float32(unauthentic) / float32(a.Total)) * 100
+
+	return a
 }
