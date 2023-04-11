@@ -1,6 +1,6 @@
 app:
   name: 'main-service'
-  version: '1.0.1'
+  version: '0.0.1'
   poller_interval: 10
   jwt_issuer: 'ottct'
 
