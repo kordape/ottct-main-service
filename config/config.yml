@@ -2,6 +2,7 @@ app:
   name: 'main-service'
   version: '1.0.0'
   poller_interval: 10
+  jwt_issuer: 'ottct'
 
 http:
   port: '8080'

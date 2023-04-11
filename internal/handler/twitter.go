@@ -11,6 +11,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-poller-service/pkg/predictor"
 	"github.com/kordape/ottct-poller-service/pkg/twitter"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -19,16 +20,14 @@ const (
 )
 
 type TwitterManager struct {
-	log              logger.Interface
 	requestValidator *validator.Validate
 	fetcher          twitter.TweetsFetcher
 	classifier       predictor.FakeNewsClassifier
 }
 
-func NewTwitterManager(log logger.Interface, validator *validator.Validate, fetcher twitter.TweetsFetcher, classifier predictor.FakeNewsClassifier) (*TwitterManager, error) {
+func NewTwitterManager(validator *validator.Validate, fetcher twitter.TweetsFetcher, classifier predictor.FakeNewsClassifier) (*TwitterManager, error) {
 
 	m := TwitterManager{
-		log:              log,
 		fetcher:          fetcher,
 		classifier:       classifier,
 		requestValidator: validator,
@@ -52,10 +51,6 @@ func (m TwitterManager) validate() error {
 		return errors.New("classifier is nil")
 	}
 
-	if m.log == nil {
-		return errors.New("logger is nil")
-	}
-
 	if m.requestValidator == nil {
 		return errors.New("request validator is nil")
 	}
@@ -63,7 +58,7 @@ func (m TwitterManager) validate() error {
 	return nil
 }
 
-func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsRequest) (api.GetTweetsResponse, error) {
+func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsRequest, log *logrus.Entry) (api.GetTweetsResponse, error) {
 	err := m.validate()
 
 	if err != nil {
@@ -72,7 +67,7 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[TwitterManager] Invalid GetTweetsRequest request: %w", err))
+		log.WithError(err).Error("[TwitterManager] Invalid GetTweetsRequest request")
 		return api.GetTweetsResponse{}, ErrInvalidRequest
 	}
 
@@ -101,7 +96,7 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 		EndTime:    to,
 	}
 
-	resp, err := m.fetcher.FetchTweets(ctx, m.log, fetchRequest)
+	resp, err := m.fetcher.FetchTweets(ctx, logger.New("debug"), fetchRequest)
 
 	if err != nil {
 		return api.GetTweetsResponse{}, fmt.Errorf("error while fetching tweets: %w", err)

@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	v1 "github.com/kordape/ottct-main-service/internal/controller/http/v1"
 	"github.com/kordape/ottct-main-service/internal/handler"
-	"github.com/kordape/ottct-main-service/pkg/logger"
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
 func NewRouter(
 	handler *gin.Engine,
-	l logger.Interface,
+	l *logrus.Entry,
 	userManager *handler.AuthManager,
 	tokenManager *token.Manager,
 	entityManager *handler.EntityManager,
@@ -22,7 +22,6 @@ func NewRouter(
 	twitterManager *handler.TwitterManager,
 ) {
 	// Options
-	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
 	// K8s probe

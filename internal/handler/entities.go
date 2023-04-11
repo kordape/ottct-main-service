@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 
-	"github.com/kordape/ottct-main-service/pkg/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Entity struct {
@@ -14,7 +14,6 @@ type Entity struct {
 
 type EntityManager struct {
 	storage EntityStorage
-	log     logger.Interface
 }
 
 type EntityStorage interface {
@@ -22,27 +21,26 @@ type EntityStorage interface {
 	GetEntities() ([]Entity, error)
 }
 
-func NewEntityManager(entityStorage EntityStorage, log logger.Interface) *EntityManager {
+func NewEntityManager(entityStorage EntityStorage) *EntityManager {
 	return &EntityManager{
 		storage: entityStorage,
-		log:     log,
 	}
 }
 
-func (m EntityManager) GetEntity(id string) (entity *Entity, err error) {
+func (m EntityManager) GetEntity(id string, log *logrus.Entry) (entity *Entity, err error) {
 	entity, err = m.storage.GetEntity(id)
 	if err != nil {
-		m.log.Error(fmt.Errorf("[EntityManager] Failed to get entity by id: %w", err))
+		log.WithError(err).Error("[EntityManager] Failed to get entity by id")
 		return nil, fmt.Errorf("[EntityManager] storage error: %w", err)
 	}
 
 	return
 }
 
-func (m EntityManager) GetEntities() (entities []Entity, err error) {
+func (m EntityManager) GetEntities(log *logrus.Entry) (entities []Entity, err error) {
 	entities, err = m.storage.GetEntities()
 	if err != nil {
-		m.log.Error(fmt.Errorf("[EntityManager] Failed to get entities: %w", err))
+		log.WithError(err).Error("[EntityManager] Failed to get entities")
 		return nil, fmt.Errorf("[EntityManager] storage error: %w", err)
 	}
 

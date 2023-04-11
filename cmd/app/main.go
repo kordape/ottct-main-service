@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	sqsservice "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
 	pg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -21,7 +21,6 @@ import (
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/internal/ses"
 	"github.com/kordape/ottct-main-service/internal/worker"
-	"github.com/kordape/ottct-main-service/pkg/logger"
 	sqspkg "github.com/kordape/ottct-main-service/pkg/sqs"
 	"github.com/kordape/ottct-main-service/pkg/token"
 	"github.com/kordape/ottct-poller-service/pkg/predictor"
@@ -29,13 +28,22 @@ import (
 )
 
 func main() {
+
+	logger := logrus.StandardLogger()
+	logrus.SetReportCaller(true)
+	logrus.SetFormatter(
+		&logrus.TextFormatter{
+			ForceColors: true,
+		},
+	)
+
 	// Configuration
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Config error: %s", err)
+		logger.Fatalf("Config error: %s", err)
 	}
 
-	log := logger.New(cfg.Log.Level)
+	log := setupLogger(logger, cfg)
 
 	awsCfg, err := initAWSConfig(cfg.AWS.Region, cfg.AWS.EndpointURL)
 	if err != nil {
@@ -49,44 +57,34 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := postgres.New(dbClient, log)
+	db, err := postgres.New(dbClient)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = db.Migrate()
+	err = db.Migrate(log)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tokenManager, err := token.NewManager(cfg.SecretKey, "ottct")
+	tokenManager, err := token.NewManager(cfg.SecretKey, cfg.App.JWTIssuer)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	userManager, err := handler.NewAuthManager(db, log, validator.New(), tokenManager)
+	userManager, err := handler.NewAuthManager(db, validator.New(), tokenManager)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	entityManager := handler.NewEntityManager(db, log)
+	entityManager := handler.NewEntityManager(db)
 
-	subscriptionsManager, err := handler.NewSubscriptionManager(db, log, validator.New())
+	subscriptionsManager, err := handler.NewSubscriptionManager(db, validator.New())
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	w := worker.NewWorker(
-		cfg.App.PollerInterval,
-		sqsClient,
-		ses.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
-	)
-
-	// Run sqs poller worker (as a background process)
-	w.Run(log, subscriptionsManager)
 
 	twitterManager, err := handler.NewTwitterManager(
-		log,
 		validator.New(),
 		twitter.New(
 			&http.Client{
@@ -102,8 +100,35 @@ func main() {
 		),
 	)
 
+	w := worker.NewWorker(
+		cfg.App.PollerInterval,
+		sqsClient,
+		ses.SendFakeNewsEmailFnBuilder(sesv2.NewFromConfig(awsCfg), cfg.AWS.VerifiedSender),
+	)
+
+	// Run sqs poller worker (as a background process)
+	w.Run(log.WithField("domain", "worker"), subscriptionsManager)
+
 	// Run app
 	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
+
+}
+
+func setupLogger(logger *logrus.Logger, cfg *config.Config) *logrus.Entry {
+	level, err := logrus.ParseLevel(cfg.Log.Level)
+	if err != nil {
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(level)
+	}
+
+	log := logrus.NewEntry(logger)
+	log = log.WithFields(logrus.Fields{
+		"service": cfg.App.Name,
+		"version": cfg.App.Version,
+	})
+
+	return log
 }
 
 func initAWSConfig(region, endpoint string) (aws.Config, error) {

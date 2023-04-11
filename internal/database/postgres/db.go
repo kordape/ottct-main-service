@@ -4,20 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kordape/ottct-main-service/pkg/logger"
-
 	"gorm.io/gorm"
 )
 
 type DB struct {
-	db  *gorm.DB
-	log *logger.Logger
+	db *gorm.DB
 }
 
-func New(db *gorm.DB, log *logger.Logger) (*DB, error) {
+func New(db *gorm.DB) (*DB, error) {
 	d := &DB{
-		db:  db,
-		log: log,
+		db: db,
 	}
 
 	err := d.validate()
@@ -32,10 +28,6 @@ func New(db *gorm.DB, log *logger.Logger) (*DB, error) {
 func (db *DB) validate() error {
 	if db.db == nil {
 		return errors.New("validation error: db is nil")
-	}
-
-	if db.log == nil {
-		return errors.New("validation error: log is nil")
 	}
 
 	return nil
