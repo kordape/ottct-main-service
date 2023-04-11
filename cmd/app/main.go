@@ -32,8 +32,8 @@ func main() {
 	logger := logrus.StandardLogger()
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(
-		&logrus.TextFormatter{
-			ForceColors: true,
+		&logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
 		},
 	)
 
@@ -98,6 +98,7 @@ func main() {
 			},
 			cfg.PredictorURL,
 		),
+		db,
 	)
 
 	w := worker.NewWorker(

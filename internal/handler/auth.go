@@ -23,8 +23,9 @@ type User struct {
 }
 
 type UserStorage interface {
-	CreateUser(user User) error
+	CreateUser(user User) (User, error)
 	GetUserByCredentials(email string, password string) (User, error)
+	GetUserByEmail(email string) (User, error)
 }
 
 type AuthManager struct {
@@ -66,30 +67,30 @@ func (m AuthManager) validate() error {
 	return nil
 }
 
-func (m AuthManager) SignUp(request api.SignUpRequest, log *logrus.Entry) error {
+func (m AuthManager) SignUp(request api.SignUpRequest, log *logrus.Entry) (User, error) {
 	err := m.validate()
 
 	if err != nil {
-		return fmt.Errorf("[AuthManager] manager validation error: %w", err)
+		return User{}, fmt.Errorf("[AuthManager] manager validation error: %w", err)
 	}
 
 	err = m.requestValidator.Struct(request)
 	if err != nil {
 		log.WithError(err).Error("[AuthManager] Invalid SignUp request")
-		return ErrInvalidRequest
+		return User{}, ErrInvalidRequest
 	}
 
-	err = m.storage.CreateUser(User{
+	user, err := m.storage.CreateUser(User{
 		Email:    request.Email,
 		Password: request.Password,
 	})
 
 	if err != nil {
 		log.WithError(err).Error("[AuthManager] Failed to create user")
-		return fmt.Errorf("[AuthManager] storage error: %w", err)
+		return User{}, fmt.Errorf("[AuthManager] storage error: %w", err)
 	}
 
-	return nil
+	return user, nil
 }
 
 func (m AuthManager) Auth(request api.AuthRequest, log *logrus.Entry) (string, error) {
@@ -119,4 +120,21 @@ func (m AuthManager) Auth(request api.AuthRequest, log *logrus.Entry) (string, e
 	}
 
 	return token, nil
+}
+
+func (m AuthManager) GetUserByEmail(email string, log *logrus.Entry) (User, error) {
+	err := m.validate()
+
+	if err != nil {
+		return User{}, fmt.Errorf("[AuthManager] manager validation error: %w", err)
+	}
+
+	user, err := m.storage.GetUserByEmail(email)
+
+	if err != nil {
+		log.WithError(err).Warn("[AuthManager] Failed to get user")
+		return User{}, fmt.Errorf("[AuthManager] storage error: %w", err)
+	}
+
+	return user, nil
 }

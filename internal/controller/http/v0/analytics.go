@@ -12,7 +12,7 @@ import (
 	"github.com/kordape/ottct-main-service/pkg/httpserver"
 )
 
-func (r *routes) newGetTweetsHandler(manager *handler.TwitterManager) func(c *gin.Context) {
+func (r *routes) newGetAnalyticsHandler(manager *handler.TwitterManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		logger := httpserver.GetLogger(c)
 

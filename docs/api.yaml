@@ -101,7 +101,7 @@ paths:
           schema:
             type: string
             format: date-time
-            default: now-1hr
+            default: now-24hr
         - name: to
           in: query
           description: The ending date-time for the tweet search
@@ -347,7 +347,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/analytics:
     get:
-      summary: Get Tweets
+      summary: Get Tweets Analytics
       tags:
         - v1
       security:
@@ -366,7 +366,7 @@ paths:
           schema:
             type: string
             format: date-time
-            default: now-1hr
+            default: now-24hr
         - name: to
           in: query
           description: The ending date-time for the tweet search

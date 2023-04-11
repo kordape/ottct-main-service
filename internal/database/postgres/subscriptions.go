@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/kordape/ottct-main-service/internal/handler"
@@ -27,7 +28,20 @@ func (db *DB) GetSubscriptionsByUser(userId uint) ([]handler.Entity, error) {
 }
 
 func (db *DB) AddSubscription(userId uint, entityId string) error {
-	err := db.db.Model(&model.User{ID: userId}).Association("Subscriptions").Append(&model.Entity{ID: entityId})
+	// Retrieve the User by ID
+	var user model.User
+	if err := db.db.First(&user, userId).Error; err != nil {
+		return errors.New("user not found")
+	}
+
+	// Retrieve the Entity by ID
+	var entity model.Entity
+	if err := db.db.First(&entity, "id = ?", entityId).Error; err != nil {
+		return handler.ErrEntityNotFound
+	}
+
+	// Subscribe the User to the Entity
+	err := db.db.Model(&user).Association("Subscriptions").Append(&entity)
 	if err != nil {
 		return fmt.Errorf("error adding subscription to the user: %w", err)
 	}

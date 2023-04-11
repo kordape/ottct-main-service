@@ -40,6 +40,11 @@ func NewRoutes(
 
 	tweets := handler.Group("/tweets")
 	{
-		tweets.GET("/", r.newGetTweetsHandler(twitterManager))
+		tweets.GET("/", r.newGetAnalyticsHandler(twitterManager))
+	}
+
+	subscribe := handler.Group("/subscribe")
+	{
+		subscribe.POST("/", r.newPostSubscribeHandler(entityManager, userManager, subscriptionsManager))
 	}
 }

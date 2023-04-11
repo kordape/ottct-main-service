@@ -3,6 +3,7 @@ package httpserver
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/pkg/token"
@@ -73,8 +74,8 @@ func defaultLogger() *logrus.Entry {
 	log := logrus.StandardLogger()
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(
-		&logrus.TextFormatter{
-			ForceColors: true,
+		&logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
 		},
 	)
 

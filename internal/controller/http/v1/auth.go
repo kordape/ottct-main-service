@@ -28,7 +28,7 @@ func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.
 			return
 		}
 
-		err = userManager.SignUp(request, logger)
+		_, err = userManager.SignUp(request, logger)
 
 		if err != nil {
 			if errors.Is(err, handler.ErrInvalidRequest) {

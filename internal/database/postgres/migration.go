@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	//go:embed seed/202303282200.sql
-	seed202303282200 string
+	//go:embed seed/initial.sql
+	seedInitial string
 )
 
 func (db *DB) Migrate(log *logrus.Entry) error {
@@ -39,7 +39,7 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 		{
 			ID: "3-initial-seed",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.Exec(seed202303282200).Error
+				return tx.Exec(seedInitial).Error
 			},
 		},
 	})

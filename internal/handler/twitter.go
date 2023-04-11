@@ -23,14 +23,16 @@ type TwitterManager struct {
 	requestValidator *validator.Validate
 	fetcher          twitter.TweetsFetcher
 	classifier       predictor.FakeNewsClassifier
+	entityStorage    EntityStorage
 }
 
-func NewTwitterManager(validator *validator.Validate, fetcher twitter.TweetsFetcher, classifier predictor.FakeNewsClassifier) (*TwitterManager, error) {
+func NewTwitterManager(validator *validator.Validate, fetcher twitter.TweetsFetcher, classifier predictor.FakeNewsClassifier, entityStorage EntityStorage) (*TwitterManager, error) {
 
 	m := TwitterManager{
 		fetcher:          fetcher,
 		classifier:       classifier,
 		requestValidator: validator,
+		entityStorage:    entityStorage,
 	}
 
 	err := m.validate()
@@ -53,6 +55,10 @@ func (m TwitterManager) validate() error {
 
 	if m.requestValidator == nil {
 		return errors.New("request validator is nil")
+	}
+
+	if m.entityStorage == nil {
+		return errors.New("entity storage is nil")
 	}
 
 	return nil
@@ -101,9 +107,15 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 		}
 	}
 
+	entityId, err := m.entityStorage.GetEntity(request.EntityID)
+	if err != nil {
+		log.WithError(err).Error("[TwitterManager] Failed to get entity by id")
+		return api.GetTweetsResponse{}, fmt.Errorf("[TwitterManager] storage error: %w", err)
+	}
+
 	fetchRequest := twitter.FetchTweetsRequest{
 		MaxResults: maxResults,
-		EntityID:   request.EntityID,
+		EntityID:   entityId.TwitterId,
 		StartTime:  from,
 		EndTime:    to,
 	}
