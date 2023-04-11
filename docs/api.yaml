@@ -82,9 +82,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /v0/tweets:
+  /v0/analytics:
     get:
-      summary: Get Tweets
+      summary: Get Tweets Analytics
       tags:
         - v0
       parameters:
@@ -345,7 +345,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /v1/tweets:
+  /v1/analytics:
     get:
       summary: Get Tweets
       tags:
