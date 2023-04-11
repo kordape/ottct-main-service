@@ -104,8 +104,6 @@ paths:
   /v1/entities:
     get:
       summary: Get Entities
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: Success

@@ -48,7 +48,7 @@ func NewRoutes(
 		secureEcho.GET("/", r.echoHandler)
 	}
 
-	entities := handler.Group("/entities", authMiddleware)
+	entities := handler.Group("/entities")
 	{
 		entities.GET("/", r.getEntitiesHandler(entityManager))
 	}

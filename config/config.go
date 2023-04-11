@@ -42,7 +42,7 @@ type (
 	}
 
 	AWS struct {
-		EndpointURL      string `env-required:"true" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
+		EndpointURL      string `env-required:"false" yaml:"aws_endpoint_url" env:"AWS_ENDPOINT_URL"`
 		Region           string `env-required:"true" yaml:"aws_region" env:"AWS_REGION"`
 		FakeNewsQueueUrl string `env-required:"true" yaml:"fake_news_queue_url" env:"FAKE_NEWS_QUEUE_URL"`
 		VerifiedSender   string `env-required:"true" env:"SENDER"`
