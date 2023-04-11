@@ -6,12 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/api"
+	"github.com/kordape/ottct-main-service/pkg/httpserver"
 	"github.com/kordape/ottct-main-service/pkg/token"
 )
 
 func (r *routes) getSubscriptionsHandler(subscriptionsManager *handler.SubscriptionManager, tokenManager *token.Manager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		logger := getLogger(c)
+		logger := httpserver.GetLogger(c)
 		claims, err := tokenManager.GetClaimsFromJWT(c.GetHeader("Authorization"))
 		if err != nil {
 			logger.WithError(err).Error("Error getting claims from bearer token")

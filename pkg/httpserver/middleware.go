@@ -1,4 +1,4 @@
-package v1
+package httpserver
 
 import (
 	"net/http"
@@ -55,7 +55,7 @@ func Logging(logger *logrus.Entry) gin.HandlerFunc {
 
 // getLogger returns a logrus entry from the gin.Context
 // Always returns a logger.
-func getLogger(c *gin.Context) *logrus.Entry {
+func GetLogger(c *gin.Context) *logrus.Entry {
 	value, ok := c.Get(ctxLoggerKey)
 	if !ok {
 		return defaultLogger()

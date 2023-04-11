@@ -18,5 +18,6 @@ type Entity struct {
 	ID            string `gorm:"primaryKey"`
 	TwitterId     string `gorm:"uniqueIndex;not null"`
 	DisplayName   string `gorm:"not null"`
+	Handle        string `gorm:"not null"`
 	Subscriptions []User `gorm:"many2many:subscriptions;"`
 }

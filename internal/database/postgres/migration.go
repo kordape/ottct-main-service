@@ -19,7 +19,7 @@ var (
 func (db *DB) Migrate(log *logrus.Entry) error {
 	m := gormigrate.New(db.db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
-			ID: "202303140000",
+			ID: "1-entity-schema",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&model.Entity{})
 			},
@@ -28,7 +28,7 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 			},
 		},
 		{
-			ID: "202302240000",
+			ID: "2-user-schema",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&model.User{})
 			},
@@ -37,7 +37,7 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 			},
 		},
 		{
-			ID: "202303282200",
+			ID: "3-initial-seed",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.Exec(seed202303282200).Error
 			},

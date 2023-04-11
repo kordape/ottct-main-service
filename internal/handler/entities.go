@@ -10,6 +10,7 @@ type Entity struct {
 	Id          string
 	TwitterId   string
 	DisplayName string
+	Handle      string
 }
 
 type EntityManager struct {
