@@ -14,6 +14,8 @@ import (
 var (
 	//go:embed seed/initial.sql
 	seedInitial string
+	//go:embed seed/demo-entities.sql
+	seedDemoEntities string
 )
 
 func (db *DB) Migrate(log *logrus.Entry) error {
@@ -40,6 +42,12 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 			ID: "3-initial-seed",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.Exec(seedInitial).Error
+			},
+		},
+		{
+			ID: "4-demo-entities-seed",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec(seedDemoEntities).Error
 			},
 		},
 	})

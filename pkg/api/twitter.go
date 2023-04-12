@@ -11,7 +11,7 @@ type GetTweetsRequest struct {
 
 type GetTweetsResponse struct {
 	Error  string    `json:"error,omitempty"`
-	Result Analytics `json:"result,omitempty"`
+	Result Analytics `json:"result"`
 }
 
 type Analytics struct {

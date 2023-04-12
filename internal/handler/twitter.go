@@ -126,6 +126,10 @@ func (m *TwitterManager) GetTweets(ctx context.Context, request api.GetTweetsReq
 		return api.GetTweetsResponse{}, fmt.Errorf("error while fetching tweets: %w", err)
 	}
 
+	if len(resp) == 0 {
+		return api.GetTweetsResponse{}, nil
+	}
+
 	classifyRequest := make([]string, len(resp))
 	for i, c := range resp {
 		classifyRequest[i] = c.Text
