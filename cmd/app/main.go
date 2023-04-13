@@ -108,7 +108,7 @@ func main() {
 	)
 
 	// Run sqs poller worker (as a background process)
-	w.Run(log.WithField("domain", "worker"), subscriptionsManager)
+	w.Run(log.WithField("domain", "alerts-worker"), subscriptionsManager)
 
 	// Run app
 	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)

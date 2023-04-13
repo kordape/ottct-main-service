@@ -35,7 +35,6 @@ func (w *Worker) Run(log *logrus.Entry, subscriptionsManager *handler.Subscripti
 		for {
 			select {
 			case <-ticker.C:
-				log.Debug("Worker tick")
 				ctx := context.Background()
 				messages, err := w.fakeNewsQueue.ReceiveMessages(ctx, sqs.WithVisibilityTimeout(20), sqs.WithMaxNumberOfMessages(5))
 				if err != nil {
