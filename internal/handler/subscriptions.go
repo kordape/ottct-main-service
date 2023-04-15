@@ -40,6 +40,7 @@ func (m SubscriptionManager) validate() error {
 	return nil
 }
 
+//go:generate mockgen -destination=../mocks/mock_subscription_storage.go -package=mocks github.com/kordape/ottct-main-service/internal/handler SubscriptionStorage
 type SubscriptionStorage interface {
 	GetSubscriptionsByUser(userId uint) ([]Entity, error)
 	GetSubscriptionsByEntity(entityId string) ([]User, error)
