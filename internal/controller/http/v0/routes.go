@@ -26,7 +26,6 @@ func NewRoutes(
 	r := &routes{}
 
 	log := l.WithField("domain", "api-v0")
-	handler.Use(httpserver.CORSMiddleware())
 	handler.Use(httpserver.Logging(log))
 
 	echo := handler.Group("/echo")

@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
@@ -30,6 +32,13 @@ func Run(
 	// HTTP Server
 	gin.SetMode(gin.ReleaseMode)
 	handler := gin.New()
+	handler.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://ottct.ai"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	http.NewRouter(handler, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
