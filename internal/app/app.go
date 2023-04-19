@@ -33,7 +33,7 @@ func Run(
 	gin.SetMode(gin.ReleaseMode)
 	handler := gin.New()
 	handler.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://ottct.ai"},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"*"},
 		AllowHeaders:     []string{"*"},
 		AllowCredentials: true,

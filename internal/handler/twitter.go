@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -178,8 +179,13 @@ func getAnalytics(tweets []tweet) api.Analytics {
 		}
 	}
 
-	a.Authentic = (float32(authentic) / float32(a.Total)) * 100
-	a.Unauthentic = (float32(unauthentic) / float32(a.Total)) * 100
+	a.Authentic = roundFloat((float64(authentic)/float64(a.Total))*100, 1)
+	a.Unauthentic = roundFloat((float64(unauthentic)/float64(a.Total))*100, 1)
 
 	return a
+}
+
+func roundFloat(val float64, precision uint) float32 {
+	ratio := math.Pow(10, float64(precision))
+	return float32(math.Round(val*ratio) / ratio)
 }
