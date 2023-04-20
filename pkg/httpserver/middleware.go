@@ -1,8 +1,9 @@
-package v1
+package httpserver
 
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/pkg/token"
@@ -23,6 +24,22 @@ func AuthMiddleware(tokenManager *token.Manager, log *logrus.Entry) gin.HandlerF
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+	}
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
 	}
 }
 
@@ -55,7 +72,7 @@ func Logging(logger *logrus.Entry) gin.HandlerFunc {
 
 // getLogger returns a logrus entry from the gin.Context
 // Always returns a logger.
-func getLogger(c *gin.Context) *logrus.Entry {
+func GetLogger(c *gin.Context) *logrus.Entry {
 	value, ok := c.Get(ctxLoggerKey)
 	if !ok {
 		return defaultLogger()
@@ -73,8 +90,8 @@ func defaultLogger() *logrus.Entry {
 	log := logrus.StandardLogger()
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(
-		&logrus.TextFormatter{
-			ForceColors: true,
+		&logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
 		},
 	)
 

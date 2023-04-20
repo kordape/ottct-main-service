@@ -1,15 +1,19 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
 )
 
+var ErrEntityNotFound error = errors.New("Entity not found")
+
 type Entity struct {
 	Id          string
 	TwitterId   string
 	DisplayName string
+	Handle      string
 }
 
 type EntityManager struct {
@@ -28,6 +32,10 @@ func NewEntityManager(entityStorage EntityStorage) *EntityManager {
 }
 
 func (m EntityManager) GetEntity(id string, log *logrus.Entry) (entity *Entity, err error) {
+	if id == "" {
+		return nil, ErrEntityNotFound
+	}
+
 	entity, err = m.storage.GetEntity(id)
 	if err != nil {
 		log.WithError(err).Error("[EntityManager] Failed to get entity by id")

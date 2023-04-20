@@ -22,6 +22,7 @@ func (db *DB) GetEntities() ([]handler.Entity, error) {
 			Id:          e.ID,
 			TwitterId:   e.TwitterId,
 			DisplayName: e.DisplayName,
+			Handle:      e.Handle,
 		}
 	}
 

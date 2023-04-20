@@ -9,11 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/api"
+	"github.com/kordape/ottct-main-service/pkg/httpserver"
 )
 
 func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		logger := getLogger(c)
+		logger := httpserver.GetLogger(c)
 
 		request := api.SignUpRequest{}
 		requestBody, _ := ioutil.ReadAll(c.Request.Body)
@@ -27,7 +28,7 @@ func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.
 			return
 		}
 
-		err = userManager.SignUp(request, logger)
+		_, err = userManager.SignUp(request, logger)
 
 		if err != nil {
 			if errors.Is(err, handler.ErrInvalidRequest) {
@@ -51,7 +52,7 @@ func (r *routes) newSignUpHandler(userManager *handler.AuthManager) func(c *gin.
 
 func (r *routes) newAuthHandler(userManager *handler.AuthManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		logger := getLogger(c)
+		logger := httpserver.GetLogger(c)
 
 		request := api.AuthRequest{}
 		requestBody, _ := ioutil.ReadAll(c.Request.Body)

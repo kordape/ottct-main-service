@@ -32,8 +32,8 @@ func main() {
 	logger := logrus.StandardLogger()
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(
-		&logrus.TextFormatter{
-			ForceColors: true,
+		&logrus.JSONFormatter{
+			TimestampFormat: time.RFC3339,
 		},
 	)
 
@@ -98,6 +98,7 @@ func main() {
 			},
 			cfg.PredictorURL,
 		),
+		db,
 	)
 
 	w := worker.NewWorker(
@@ -107,7 +108,7 @@ func main() {
 	)
 
 	// Run sqs poller worker (as a background process)
-	w.Run(log.WithField("domain", "worker"), subscriptionsManager)
+	w.Run(log.WithField("domain", "alerts-worker"), subscriptionsManager)
 
 	// Run app
 	app.Run(cfg, log, userManager, tokenManager, entityManager, subscriptionsManager, twitterManager)

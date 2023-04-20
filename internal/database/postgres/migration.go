@@ -12,14 +12,16 @@ import (
 )
 
 var (
-	//go:embed seed/202303282200.sql
-	seed202303282200 string
+	//go:embed seed/initial.sql
+	seedInitial string
+	//go:embed seed/demo-entities.sql
+	seedDemoEntities string
 )
 
 func (db *DB) Migrate(log *logrus.Entry) error {
 	m := gormigrate.New(db.db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
-			ID: "202303140000",
+			ID: "1-entity-schema",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&model.Entity{})
 			},
@@ -28,7 +30,7 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 			},
 		},
 		{
-			ID: "202302240000",
+			ID: "2-user-schema",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&model.User{})
 			},
@@ -37,9 +39,15 @@ func (db *DB) Migrate(log *logrus.Entry) error {
 			},
 		},
 		{
-			ID: "202303282200",
+			ID: "3-initial-seed",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.Exec(seed202303282200).Error
+				return tx.Exec(seedInitial).Error
+			},
+		},
+		{
+			ID: "4-demo-entities-seed",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec(seedDemoEntities).Error
 			},
 		},
 	})

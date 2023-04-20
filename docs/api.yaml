@@ -17,9 +17,154 @@ components:
       scheme: bearer
       bearerFormat: JWT
 paths:
+  /v0/entities:
+    get:
+      summary: Get Entities
+      tags:
+        - v0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    twitterId:
+                      type: string
+                    displayName:
+                      type: string
+                    twitterHandle:
+                      type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v0/subscribe:
+    post:
+      summary: Subscribe to alerts
+      tags:
+        - v0
+      requestBody:
+        description: Subscribe request body
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                entityId:
+                  type: string
+              required:
+                - email
+                - entityId
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v0/analytics:
+    get:
+      summary: Get Tweets Analytics
+      tags:
+        - v0
+      parameters:
+        - name: entityId
+          in: query
+          description: The ID of the entity to get tweets for
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: The starting date-time for the tweet search
+          required: false
+          schema:
+            type: string
+            format: date-time
+            default: now-24hr
+        - name: to
+          in: query
+          description: The ending date-time for the tweet search
+          required: false
+          schema:
+            type: string
+            format: date-time
+            default: now
+        - name: maxResults
+          in: query
+          description: The maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 5
+            maximum: 100
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: The total number of results.
+                        example: 100
+                      authentic:
+                        type: number
+                        format: float
+                        description: The percentage of authentic results.
+                        example: 92.2
+                      unauthentic:
+                        type: number
+                        format: float
+                        description: The percentage of unauthentic results.
+                        example: 0.8
+                    required:
+                      - total
+                      - authentic
+                      - unauthentic
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/signup:
     post:
       summary: Signup
+      tags:
+        - v1
       requestBody:
         description: Signup request body
         required: true
@@ -61,6 +206,8 @@ paths:
   /v1/auth:
     post:
       summary: Authenticate
+      tags:
+        - v1
       requestBody:
         description: Authenticate request body
         required: true
@@ -95,10 +242,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -108,8 +251,8 @@ paths:
   /v1/entities:
     get:
       summary: Get Entities
-      security:
-        - bearerAuth: []
+      tags:
+        - v1
       responses:
         '200':
           description: Success
@@ -126,18 +269,10 @@ paths:
                       type: string
                     displayName:
                       type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                    twitterHandle:
+                      type: string
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -147,6 +282,8 @@ paths:
   /v1/subscribe:
     get:
       summary: Get Subscriptions
+      tags:
+        - v1
       security:
         - bearerAuth: []
       responses:
@@ -165,10 +302,6 @@ paths:
                       type: string
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
@@ -179,6 +312,8 @@ paths:
   /v1/subscribe/{entityId}:
     post:
       summary: Update Subscription
+      tags:
+        - v1
       security:
         - bearerAuth: []
       parameters:
@@ -204,19 +339,17 @@ paths:
           description: Success
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /v1/tweets:
+  /v1/analytics:
     get:
-      summary: Get Tweets
+      summary: Get Tweets Analytics
+      tags:
+        - v1
       security:
         - bearerAuth: []
       parameters:
@@ -229,24 +362,28 @@ paths:
         - name: from
           in: query
           description: The starting date-time for the tweet search
-          required: true
+          required: false
           schema:
             type: string
             format: date-time
+            default: now-24hr
         - name: to
           in: query
           description: The ending date-time for the tweet search
-          required: true
+          required: false
           schema:
             type: string
             format: date-time
+            default: now
         - name: maxResults
           in: query
           description: The maximum number of results to return
-          required: true
+          required: false
           schema:
             type: integer
             format: int32
+            minimum: 5
+            maximum: 100
       responses:
         '200':
           description: Success
@@ -255,21 +392,27 @@ paths:
               schema:
                 type: object
                 properties:
-                  tweets:
-                    type: array
-                    items:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                          content:
-                            type: string
-                          createdAt:
-                            type: string
-                            format: date-time
-                          realnessScore:
-                            type: integer
-                            format: int32
+                  result:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: The total number of results.
+                        example: 100
+                      authentic:
+                        type: number
+                        format: float
+                        description: The percentage of authentic results.
+                        example: 92.2
+                      unauthentic:
+                        type: number
+                        format: float
+                        description: The percentage of unauthentic results.
+                        example: 0.8
+                    required:
+                      - total
+                      - authentic
+                      - unauthentic
         '400':
           description: Bad Request
           content:
@@ -278,10 +421,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         '500':
           description: Internal Server Error
           content:

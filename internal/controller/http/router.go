@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	v0 "github.com/kordape/ottct-main-service/internal/controller/http/v0"
 	v1 "github.com/kordape/ottct-main-service/internal/controller/http/v1"
 	"github.com/kordape/ottct-main-service/internal/handler"
 	"github.com/kordape/ottct-main-service/pkg/token"
@@ -28,10 +29,23 @@ func NewRouter(
 	handler.GET("/health", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	// Routers
-	h := handler.Group("/v1")
+	hv0 := handler.Group("/v0")
+	{
+		v0.NewRoutes(
+			hv0,
+			l,
+			userManager,
+			tokenManager,
+			entityManager,
+			subscriptionsManager,
+			twitterManager,
+		)
+	}
+
+	hv1 := handler.Group("/v1")
 	{
 		v1.NewRoutes(
-			h,
+			hv1,
 			l,
 			userManager,
 			tokenManager,

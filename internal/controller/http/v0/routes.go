@@ -1,4 +1,4 @@
-package v1
+package v0
 
 import (
 	"github.com/gin-gonic/gin"
@@ -25,28 +25,12 @@ func NewRoutes(
 ) {
 	r := &routes{}
 
-	log := l.WithField("domain", "api-v1")
+	log := l.WithField("domain", "api-v0")
 	handler.Use(httpserver.Logging(log))
-	authMiddleware := httpserver.AuthMiddleware(tokenManager, log)
 
 	echo := handler.Group("/echo")
 	{
 		echo.GET("/", r.echoHandler)
-	}
-
-	signup := handler.Group("/signup")
-	{
-		signup.POST("/", r.newSignUpHandler(userManager))
-	}
-
-	auth := handler.Group("/auth")
-	{
-		auth.POST("/", r.newAuthHandler(userManager))
-	}
-
-	secureEcho := handler.Group("/secureecho", authMiddleware)
-	{
-		secureEcho.GET("/", r.echoHandler)
 	}
 
 	entities := handler.Group("/entities")
@@ -54,14 +38,13 @@ func NewRoutes(
 		entities.GET("/", r.getEntitiesHandler(entityManager))
 	}
 
-	subscriptions := handler.Group("/subscribe", authMiddleware)
+	tweets := handler.Group("/tweets")
 	{
-		subscriptions.GET("/", r.getSubscriptionsHandler(subscriptionsManager, tokenManager))
-		subscriptions.POST("/:entityid", r.updateSubscriptionsHandler(entityManager, subscriptionsManager, tokenManager))
+		tweets.GET("/", r.newGetAnalyticsHandler(twitterManager))
 	}
 
-	tweets := handler.Group("/tweets", authMiddleware)
+	subscribe := handler.Group("/subscribe")
 	{
-		tweets.GET("/", r.newGetTweetsHandler(twitterManager))
+		subscribe.POST("/", r.newPostSubscribeHandler(entityManager, userManager, subscriptionsManager))
 	}
 }
